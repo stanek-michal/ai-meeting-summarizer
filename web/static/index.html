@@ -97,9 +97,9 @@
 
 	    // Validate file extension
 	    const fileName = file.name;
-	    const fileExtension = fileName.slice(((fileName.lastIndexOf(".") - 1) >>> 0) + 2);
-	    if (fileExtension.toLowerCase() !== 'wav') {
-		statusMessage.innerText = 'Error: Only .wav files are allowed!';
+	    const fileExtension = fileName.slice(((fileName.lastIndexOf(".") - 1) >>> 0) + 2).toLowerCase();
+	    if (fileExtension !== 'wav' && fileExtension !== 'mp4') {
+		statusMessage.innerText = 'Error: Only .wav and .mp4 files are allowed!';
 		statusMessage.classList.remove('hidden');
 		return;
 	    }

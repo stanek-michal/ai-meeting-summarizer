@@ -7,11 +7,16 @@ import (
 	"sync"
 )
 
+// Result contains a full transcript and a text summary of it
+type Result struct {
+	Transcript string
+	Summary    string
+}
 // Task represents a processing task
 type Task struct {
 	ID     string
 	Status string
-	Result string
+	Result Result
 }
 
 // Queue represents a queue of tasks to be processed
