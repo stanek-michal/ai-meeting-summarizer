@@ -2,8 +2,8 @@ package transport
 
 import (
     "encoding/json"
-    "fmt"
-    "io"
+//    "fmt"
+ //   "io"
     "net/http"
     "github.com/stanek-michal/go-ai-summarizer/pkg/queue"
 )
@@ -16,18 +16,7 @@ func NewHTTPHandler(q *queue.Queue) *HTTPHandler {
     return &HTTPHandler{Queue: q}
 }
 
-func (h *HTTPHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    switch r.URL.Path {
-    case "/upload":
-        h.handleFileUpload(w, r)
-    case "/status":
-        h.handleStatus(w, r)
-    default:
-        http.NotFound(w, r)
-    }
-}
-
-func (h *HTTPHandler) handleFileUpload(w http.ResponseWriter, r *http.Request) {
+func (h *HTTPHandler) HandleFileUpload(w http.ResponseWriter, r *http.Request) {
     // Parse the multipart form
     const maxUploadSize = 10 << 20 // 10 MB
     if err := r.ParseMultipartForm(maxUploadSize); err != nil {
@@ -54,7 +43,7 @@ func (h *HTTPHandler) handleFileUpload(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(map[string]string{"task_id": taskID})
 }
 
-func (h *HTTPHandler) handleStatus(w http.ResponseWriter, r *http.Request) {
+func (h *HTTPHandler) HandleStatus(w http.ResponseWriter, r *http.Request) {
     // Extract task ID from query parameters
     taskID := r.URL.Query().Get("id")
     if taskID == "" {

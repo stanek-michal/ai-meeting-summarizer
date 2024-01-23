@@ -14,11 +14,14 @@ func main() {
 
     // Initialize the HTTP server
     httpHandler := transport.NewHTTPHandler(taskQueue)
-    http.HandleFunc("/", httpHandler.ServeHTTP)
+
+    // Setup handler for processing related endpoints
+    http.HandleFunc("/upload", httpHandler.HandleFileUpload)
+    http.HandleFunc("/status", httpHandler.HandleStatus)
 
     // Serve static files
     fs := http.FileServer(http.Dir("./web/static"))
-    http.Handle("/static/", http.StripPrefix("/static/", fs))
+    http.Handle("/", fs) // Serve index.html at root
 
     // Start the server
     log.Println("Starting server on :9001")
