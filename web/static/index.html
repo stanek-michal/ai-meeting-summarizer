@@ -11,10 +11,15 @@
             font-family: sans-serif;
             margin: 50px auto;
             padding: 20px;
+            text-align: center;
         }
         #uploadProgress {
             width: 80%;
             margin: 10px auto;
+        }
+        .status-message {
+            text-align: center;
+            margin-top: 10px;
         }
         .hidden {
             display: none;
@@ -25,15 +30,18 @@
 
     <h1 style="text-align: center;">AI Audio Processing</h1>
     <div id="drop-area">
-        <p>Drag and drop a .wav file here</p>
+        <p id="drop-message">Drag and drop a .wav file here</p>
     </div>
     <progress id="uploadProgress" value="0" max="100" class="hidden"></progress>
-    <p id="statusMessage" class="hidden"></p>
+    <p id="statusMessage" class="status-message hidden"></p>
+    <button id="saveButton" class="hidden">Save Result</button>
 
     <script>
         const dropArea = document.getElementById('drop-area');
+        const dropMessage = document.getElementById('drop-message');
         const uploadProgress = document.getElementById('uploadProgress');
         const statusMessage = document.getElementById('statusMessage');
+        const saveButton = document.getElementById('saveButton');
 
         dropArea.addEventListener('dragover', (event) => {
             event.stopPropagation();
@@ -50,32 +58,45 @@
                 return;
             }
 
+            dropMessage.innerText = `File: ${file.name}`;
             const formData = new FormData();
             formData.append('file', file);
             uploadProgress.classList.remove('hidden');
             statusMessage.classList.remove('hidden');
             statusMessage.innerText = 'Uploading...';
 
-            fetch('/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    throw new Error('Network response was not ok.');
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/upload', true);
+
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = Math.round((e.loaded / e.total) * 100);
+                    uploadProgress.value = percentComplete;
+                    statusMessage.innerText = `Uploading... ${percentComplete}%`;
                 }
-            })
-            .then(data => {
-                statusMessage.innerText = 'Upload complete. Processing...';
-                checkTaskStatus(data.task_id);
-            })
-            .catch(error => {
+            };
+
+            xhr.onload = function() {
+                if (xhr.status === 200 || xhr.status === 202) {
+                    const response = JSON.parse(xhr.responseText);
+                    uploadProgress.classList.add('hidden');
+                    statusMessage.innerText = 'Upload complete. Processing...'; // Update text
+		    if (response.task_id) {
+			checkTaskStatus(response.task_id); // Start checking status
+                    } else {
+			statusMessage.innerText = 'Error: failed to get task_id. Please try again.';
+		    }
+                } else {
+                    statusMessage.innerText = 'Error: upload failed - status code: ' + xhr.status + '. Please try again.';
+                }
+            };
+
+            xhr.onerror = function() {
                 uploadProgress.classList.add('hidden');
                 statusMessage.innerText = 'Upload failed. Please try again.';
-                console.error('Error:', error);
-            });
+            };
+
+            xhr.send(formData);
         });
 
         function checkTaskStatus(taskId) {
@@ -86,12 +107,12 @@
                     statusMessage.innerText = 'Processing...';
                     setTimeout(() => checkTaskStatus(taskId), 2000);
                 } else if (data.Status === 'completed') {
+                    uploadProgress.value = 100;
                     statusMessage.innerText = 'Processing complete.';
-                    // Display the result
-                    const result = document.createElement('p');
-                    result.innerText = data.Result;
-                    document.body.appendChild(result);
-                    uploadProgress.classList.add('hidden');
+                    saveButton.classList.remove('hidden');
+                    saveButton.onclick = function() {
+                        download('result.txt', data.Result);
+                    };
                 } else {
                     statusMessage.innerText = `Error: ${data.Result}`;
                 }
@@ -100,6 +121,19 @@
                 statusMessage.innerText = 'Error checking task status. Please try again.';
                 console.error('Error:', error);
             });
+        }
+
+        function download(filename, text) {
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+
+            element.style.display = 'none';
+            document.body.appendChild(element);
+
+            element.click();
+
+            document.body.removeChild(element);
         }
     </script>
 

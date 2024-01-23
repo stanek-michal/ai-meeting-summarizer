@@ -18,7 +18,7 @@ func NewProcessor() *Processor {
 func (p *Processor) Process(file io.Reader) (string, error) {
 	// Replace this with actual processing logic
 	// For now, it just simulates processing time
-	time.Sleep(5 * time.Second)
+	time.Sleep(50 * time.Second)
 
 	// Example of running a system command:
 	// cmd := exec.Command("system_command", "arg1", "arg2")
