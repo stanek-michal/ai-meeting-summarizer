@@ -86,21 +86,31 @@
             event.dataTransfer.dropEffect = 'copy';
         });
 
-        dropArea.addEventListener('drop', (event) => {
-            event.stopPropagation();
-            event.preventDefault();
-            const file = event.dataTransfer.files[0];
-            if (!file) {
-                alert('Please drop a .wav file.');
-                return;
-            }
+	dropArea.addEventListener('drop', (event) => {
+	    event.stopPropagation();
+	    event.preventDefault();
+	    const file = event.dataTransfer.files[0];
+	    if (!file) {
+		alert('Please drop a file.');
+		return;
+	    }
 
-            dropMessage.innerText = `File: ${file.name}`;
-            const formData = new FormData();
-            formData.append('file', file);
-            uploadProgress.classList.remove('hidden');
-            statusMessage.classList.remove('hidden');
-            statusMessage.innerText = 'Uploading...';
+	    // Validate file extension
+	    const fileName = file.name;
+	    const fileExtension = fileName.slice(((fileName.lastIndexOf(".") - 1) >>> 0) + 2);
+	    if (fileExtension.toLowerCase() !== 'wav') {
+		statusMessage.innerText = 'Error: Only .wav files are allowed!';
+		statusMessage.classList.remove('hidden');
+		return;
+	    }
+
+	    // If the extension is valid, proceed with the upload
+	    dropMessage.innerText = `File: ${file.name}`;
+	    const formData = new FormData();
+	    formData.append('file', file);
+	    uploadProgress.classList.remove('hidden');
+	    statusMessage.classList.remove('hidden');
+	    statusMessage.innerText = 'Uploading...';
 
             const xhr = new XMLHttpRequest();
             xhr.open('POST', '/upload', true);
