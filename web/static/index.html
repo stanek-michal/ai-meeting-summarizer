@@ -26,15 +26,21 @@
             margin-top: 10px;
         }
         .hidden {
-            display: none;
+	    display: none !important;
+
         }
         #saveButton {
-            display: block; /* Make the button block level for easier centering */
+	    display: block;
             width: 200px; /* Make the button wider */
             height: 50px; /* Make the button taller */
             font-size: 20px; /* Increase font size */
             margin: 20px auto; /* Center the button horizontally */
             cursor: pointer;
+        }
+        #file-transfer {
+            display: none; /* Hidden by default, will be shown during processing */
+            margin: 20px auto;
+            text-align: center;
         }
         #dancing-chicken {
             display: none; /* Hidden by default, will be shown during processing */
@@ -52,7 +58,8 @@
     <progress id="uploadProgress" value="0" max="100" class="hidden"></progress>
     <p id="statusMessage" class="status-message hidden"></p>
     <button id="saveButton" class="hidden">Save Result</button>
-    <img id="dancing-chicken" src="dancing-chicken.gif" alt="Dancing Chicken"/> <!-- Add your dancing chicken gif URL -->
+    <img id="file-transfer" alt="File Transfer"/>
+    <img id="dancing-chicken" alt="Dancing Chicken"/>
 
     <script>
         const dropArea = document.getElementById('drop-area');
@@ -61,6 +68,15 @@
         const statusMessage = document.getElementById('statusMessage');
         const saveButton = document.getElementById('saveButton');
         const dancingChicken = document.getElementById('dancing-chicken');
+        const fileTransferAnim = document.getElementById('file-transfer');
+
+	const gifUrls = [
+		'https://j.gifs.com/mGGxQN.gif',
+		'https://gifdb.com/images/high/dope-chicken-dance-with-sunglasses-eyhyk2r1k52mzuh0.gif',
+		'https://www.allyourbasearebelongtous.com/gif/allyourbase.gif',
+		'https://i.kym-cdn.com/photos/images/original/000/059/601/spiderman116_spideydancing1.gif',
+		'https://i.gifer.com/UwPC.gif',
+        ];
 
         dropArea.addEventListener('dragover', (event) => {
             event.stopPropagation();
@@ -92,14 +108,22 @@
                     const percentComplete = Math.round((e.loaded / e.total) * 100);
                     uploadProgress.value = percentComplete;
                     statusMessage.innerText = `Uploading... ${percentComplete}%`;
+		    if (window.getComputedStyle(fileTransferAnim).display !== 'block') {
+			    fileTransferAnim.src = 'https://i.imgur.com/I5D2NXj.gif';
+			    fileTransferAnim.style.display = 'block'; // Show the file transfer gid
+	            }
                 }
             };
 
             xhr.onload = function() {
                 if (xhr.status === 200 || xhr.status === 202) {
                     const response = JSON.parse(xhr.responseText);
+                    fileTransferAnim.style.display = 'none'; // Hide the file transfer gif
                     uploadProgress.classList.add('hidden');
                     statusMessage.innerText = 'Upload complete. Processing...'; // Update text
+                    // Choose a random GIF from the list
+                    dancingChicken.src = gifUrls[Math.floor(Math.random() * gifUrls.length)];
+                    dancingChicken.style.display = 'block'; // Show the random dancing chicken gif
                    if (response.task_id) {
                        checkTaskStatus(response.task_id); // Start checking status
                     } else {
@@ -124,13 +148,12 @@
             .then(response => response.json())
             .then(data => {
                 if (data.Status === 'processing') {
-                    statusMessage.innerText = 'Processing...';
-                    dancingChicken.style.display = 'block'; // Show the dancing chicken gif
+		    statusMessage.innerText = 'Processing...';
                     setTimeout(() => checkTaskStatus(taskId), 2000);
                 } else if (data.Status === 'completed') {
                     uploadProgress.value = 100; 
                     statusMessage.innerText = 'Processing complete.';
-                    dancingChicken.style.display = 'none'; // Hide the dancing chicken gif
+                    dancingChicken.style.display = 'none'; // Hide the dancing chicken gif on complete
                     saveButton.classList.remove('hidden');
                     saveButton.onclick = function() {
                         // Save Transcript and Summary to separate files
