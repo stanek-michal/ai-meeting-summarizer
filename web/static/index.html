@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI Audio Processing</title>
+    <title>AI Meeting Summarizer</title>
     <style>
         body {
-            background-image: url('background.jpg'); /* Add your background image URL */
+            background-image: url('background.jpg');
             background-size: cover;
         }
         #drop-area {
@@ -18,8 +18,9 @@
             text-align: center;
         }
         #uploadProgress {
-            width: 80%;
-            margin: 10px auto;
+	    display: block;
+            width: 50%;
+            margin: 20px auto;
         }
         .status-message {
             text-align: center;
@@ -31,9 +32,9 @@
         }
         #saveButton {
 	    display: block;
-            width: 200px; /* Make the button wider */
-            height: 50px; /* Make the button taller */
-            font-size: 20px; /* Increase font size */
+            width: 200px;
+            height: 50px;
+            font-size: 20px;
             margin: 20px auto; /* Center the button horizontally */
             cursor: pointer;
         }
@@ -51,7 +52,7 @@
 </head>
 <body>
 
-    <h1 style="text-align: center;">AI Audio Processing</h1>
+    <h1 style="text-align: center;">AI Meeting Summarizer</h1>
     <div id="drop-area">
         <p id="drop-message">Drag and drop a .wav file here</p>
     </div>
@@ -76,6 +77,7 @@
 		'https://www.allyourbasearebelongtous.com/gif/allyourbase.gif',
 		'https://i.kym-cdn.com/photos/images/original/000/059/601/spiderman116_spideydancing1.gif',
 		'https://i.gifer.com/UwPC.gif',
+		'https://j.gifs.com/Rgk1LR.gif',
         ];
 
         dropArea.addEventListener('dragover', (event) => {
