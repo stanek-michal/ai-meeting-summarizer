@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <title>AI Audio Processing</title>
     <style>
+        body {
+            background-image: url('background.jpg'); /* Add your background image URL */
+            background-size: cover;
+        }
         #drop-area {
             border: 2px dashed #ccc;
             border-radius: 20px;
@@ -24,6 +28,19 @@
         .hidden {
             display: none;
         }
+        #saveButton {
+            display: block; /* Make the button block level for easier centering */
+            width: 200px; /* Make the button wider */
+            height: 50px; /* Make the button taller */
+            font-size: 20px; /* Increase font size */
+            margin: 20px auto; /* Center the button horizontally */
+            cursor: pointer;
+        }
+        #dancing-chicken {
+            display: none; /* Hidden by default, will be shown during processing */
+            margin: 20px auto;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -35,6 +52,7 @@
     <progress id="uploadProgress" value="0" max="100" class="hidden"></progress>
     <p id="statusMessage" class="status-message hidden"></p>
     <button id="saveButton" class="hidden">Save Result</button>
+    <img id="dancing-chicken" src="dancing-chicken.gif" alt="Dancing Chicken"/> <!-- Add your dancing chicken gif URL -->
 
     <script>
         const dropArea = document.getElementById('drop-area');
@@ -42,6 +60,7 @@
         const uploadProgress = document.getElementById('uploadProgress');
         const statusMessage = document.getElementById('statusMessage');
         const saveButton = document.getElementById('saveButton');
+        const dancingChicken = document.getElementById('dancing-chicken');
 
         dropArea.addEventListener('dragover', (event) => {
             event.stopPropagation();
@@ -81,11 +100,11 @@
                     const response = JSON.parse(xhr.responseText);
                     uploadProgress.classList.add('hidden');
                     statusMessage.innerText = 'Upload complete. Processing...'; // Update text
-		    if (response.task_id) {
-			checkTaskStatus(response.task_id); // Start checking status
+                   if (response.task_id) {
+                       checkTaskStatus(response.task_id); // Start checking status
                     } else {
-			statusMessage.innerText = 'Error: failed to get task_id. Please try again.';
-		    }
+                       statusMessage.innerText = 'Error: failed to get task_id. Please try again.';
+                   }
                 } else {
                     statusMessage.innerText = 'Error: upload failed - status code: ' + xhr.status + '. Please try again.';
                 }
@@ -99,26 +118,33 @@
             xhr.send(formData);
         });
 
+
         function checkTaskStatus(taskId) {
             fetch(`/status?id=${taskId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.Status === 'processing') {
                     statusMessage.innerText = 'Processing...';
+                    dancingChicken.style.display = 'block'; // Show the dancing chicken gif
                     setTimeout(() => checkTaskStatus(taskId), 2000);
                 } else if (data.Status === 'completed') {
-                    uploadProgress.value = 100;
+                    uploadProgress.value = 100; 
                     statusMessage.innerText = 'Processing complete.';
+                    dancingChicken.style.display = 'none'; // Hide the dancing chicken gif
                     saveButton.classList.remove('hidden');
                     saveButton.onclick = function() {
-                        download('result.txt', data.Result);
+                        // Save Transcript and Summary to separate files
+                        download('transcript.txt', data.Result.Transcript);
+                        download('summary.txt', data.Result.Summary);
                     };
                 } else {
                     statusMessage.innerText = `Error: ${data.Result}`;
+                    dancingChicken.style.display = 'none'; // Hide the dancing chicken gif in case of error
                 }
             })
             .catch(error => {
                 statusMessage.innerText = 'Error checking task status. Please try again.';
+                dancingChicken.style.display = 'none'; // Hide the dancing chicken gif in case of error
                 console.error('Error:', error);
             });
         }
@@ -135,6 +161,7 @@
 
             document.body.removeChild(element);
         }
+
     </script>
 
 </body>
