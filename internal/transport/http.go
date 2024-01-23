@@ -17,10 +17,26 @@ func NewHTTPHandler(q *queue.Queue) *HTTPHandler {
 }
 
 func (h *HTTPHandler) HandleFileUpload(w http.ResponseWriter, r *http.Request) {
+    // Set the maximum allowed file size to 10GB
+    const maxUploadSize = 10 << 30 // 10 GB
+
+    // Check the size of the request body (optional but recommended)
+    if r.ContentLength > maxUploadSize {
+        http.Error(w, "The uploaded file is too large", http.StatusRequestEntityTooLarge)
+        return
+    }
+
+    // Wrap the request body with a MaxBytesReader to enforce the size limit
+    r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
+
     // Parse the multipart form
-    const maxUploadSize = 10 << 20 // 10 MB
     if err := r.ParseMultipartForm(maxUploadSize); err != nil {
-        http.Error(w, "File too large", http.StatusBadRequest)
+        // Handle the case where the file is too large to fit in memory
+        if err == http.ErrHandlerTimeout {
+            http.Error(w, "The uploaded file is too large", http.StatusRequestEntityTooLarge)
+        } else {
+            http.Error(w, "Error parsing multipart form", http.StatusInternalServerError)
+        }
         return
     }
 
