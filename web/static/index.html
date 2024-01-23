@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Audio Processing</title>
+    <style>
+        #drop-area {
+            border: 2px dashed #ccc;
+            border-radius: 20px;
+            width: 80%;
+            font-family: sans-serif;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        #uploadProgress {
+            width: 80%;
+            margin: 10px auto;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 style="text-align: center;">AI Audio Processing</h1>
+    <div id="drop-area">
+        <p>Drag and drop a .wav file here</p>
+    </div>
+    <progress id="uploadProgress" value="0" max="100" class="hidden"></progress>
+    <p id="statusMessage" class="hidden"></p>
+
+    <script>
+        const dropArea = document.getElementById('drop-area');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const statusMessage = document.getElementById('statusMessage');
+
+        dropArea.addEventListener('dragover', (event) => {
+            event.stopPropagation();
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'copy';
+        });
+
+        dropArea.addEventListener('drop', (event) => {
+            event.stopPropagation();
+            event.preventDefault();
+            const file = event.dataTransfer.files[0];
+            if (!file) {
+                alert('Please drop a .wav file.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            uploadProgress.classList.remove('hidden');
+            statusMessage.classList.remove('hidden');
+            statusMessage.innerText = 'Uploading...';
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Network response was not ok.');
+                }
+            })
+            .then(data => {
+                statusMessage.innerText = 'Upload complete. Processing...';
+                checkTaskStatus(data.task_id);
+            })
+            .catch(error => {
+                uploadProgress.classList.add('hidden');
+                statusMessage.innerText = 'Upload failed. Please try again.';
+                console.error('Error:', error);
+            });
+        });
+
+        function checkTaskStatus(taskId) {
+            fetch(`/status?id=${taskId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.Status === 'processing') {
+                    statusMessage.innerText = 'Processing...';
+                    setTimeout(() => checkTaskStatus(taskId), 2000);
+                } else if (data.Status === 'completed') {
+                    statusMessage.innerText = 'Processing complete.';
+                    // Display the result
+                    const result = document.createElement('p');
+                    result.innerText = data.Result;
+                    document.body.appendChild(result);
+                    uploadProgress.classList.add('hidden');
+                } else {
+                    statusMessage.innerText = `Error: ${data.Result}`;
+                }
+            })
+            .catch(error => {
+                statusMessage.innerText = 'Error checking task status. Please try again.';
+                console.error('Error:', error);
+            });
+        }
+    </script>
+
+</body>
+</html>
