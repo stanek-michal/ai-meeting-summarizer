@@ -4,12 +4,20 @@ import (
     "encoding/json"
 //    "fmt"
     "io"
+    "fmt"
+    "io/ioutil"
     "os"
     "strings"
     "strconv"
+    "sync"
     "net/http"
     "github.com/stanek-michal/go-ai-summarizer/pkg/queue"
 )
+
+// Mutex for counter.txt (visitor counter)
+var counterMutex sync.Mutex
+
+const counterPath = "web/counter.txt"
 
 type HTTPHandler struct {
     Queue *queue.Queue
@@ -118,4 +126,69 @@ func (h *HTTPHandler) HandleStatus(w http.ResponseWriter, r *http.Request) {
     // Respond with the task status
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(taskInfo)
+}
+
+func getCounter() (int, error) {
+//    // Read the current counter value from the file
+//    data, err := ioutil.ReadFile(counterPath)
+//    if err != nil {
+//        return 0, err
+//    }
+//    count, err := strconv.Atoi(strings.TrimSpace(string(data)))
+//    if err != nil {
+//        return 0, err
+//    }
+//    return count, nil
+    // Read the current counter value from the file
+    data, err := ioutil.ReadFile(counterPath)
+    if err != nil {
+        // Check if the error is because the file does not exist
+        if os.IsNotExist(err) {
+            // Create the file with an initial count of 0
+            initialCount := []byte("0\n")
+            err = ioutil.WriteFile(counterPath, initialCount, 0644) // 0644 is a common permission setting allowing read/write for owner and read for others
+            if err != nil {
+                return 0, err
+            }
+            return 0, nil // Successfully created the file with initial count of 0
+        } else {
+            // Return the original error if it was not because the file does not exist
+            return 0, err
+        }
+    }
+
+    // Convert the counter from string to int
+    count, err := strconv.Atoi(strings.TrimSpace(string(data)))
+    if err != nil {
+        return 0, err
+    }
+
+    return count, nil
+}
+
+func incrementCounter() (int, error) {
+    counterMutex.Lock()
+    defer counterMutex.Unlock()
+
+    count, err := getCounter()
+    if err != nil {
+        return 0, err
+    }
+
+    count++
+    err = ioutil.WriteFile(counterPath, []byte(strconv.Itoa(count)), 0644)
+    if err != nil {
+        return 0, err
+    }
+
+    return count, nil
+}
+
+func (h *HTTPHandler) HandleCounter(w http.ResponseWriter, r *http.Request) {
+    count, err := incrementCounter()
+    if err != nil {
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+        return
+    }
+    fmt.Fprintf(w, "%d", count)
 }

@@ -48,6 +48,14 @@
             margin: 20px auto;
             text-align: center;
         }
+	#visitor-counter {
+	    display: block;
+            position: absolute;
+            top: 90%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Adjust for the element's own size */
+            font-size: 2em; /* Example size, adjust as needed */
+        }
     </style>
 </head>
 <body>
@@ -61,6 +69,12 @@
     <button id="saveButton" class="hidden">Save Result</button>
     <img id="file-transfer" alt="File Transfer"/>
     <img id="dancing-chicken" alt="Dancing Chicken"/>
+    <div id="visitor-counter" >
+	    <img src="0.gif" id="digit1">
+	    <img src="0.gif" id="digit2">
+	    <img src="0.gif" id="digit3">
+	    <img src="0.gif" id="digit4">
+    </div>
 
     <script>
         const dropArea = document.getElementById('drop-area');
@@ -70,6 +84,7 @@
         const saveButton = document.getElementById('saveButton');
         const dancingChicken = document.getElementById('dancing-chicken');
         const fileTransferAnim = document.getElementById('file-transfer');
+        const visitorcounter = document.getElementById('visitor-counter');
 
 	const gifUrls = [
 		'https://j.gifs.com/mGGxQN.gif',
@@ -81,6 +96,30 @@
 		'https://i.gifer.com/YQDs.gif',
 		'https://i.gifer.com/XwI7.gif'
         ];
+
+        function updateVisitorCounter() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/counter', true);
+            xhr.onload = function() {
+		    if (xhr.status === 200) {
+			var count = parseInt(xhr.responseText, 10);
+			var countStr = String(count).padStart(4, '0');
+
+			for (var i = 0; i < countStr.length; i++) {
+			    var digit = countStr[i];
+			    document.getElementById('digit' + (i + 1)).src = digit + '.gif';
+			}
+		    } else {
+			console.error('Error retrieving counter')
+		    }
+	    };
+	    xhr.onerror = function() {
+                console.error('Error while sending request to server.');
+            };
+            xhr.send();
+	}
+
+	updateVisitorCounter();
 
         dropArea.addEventListener('dragover', (event) => {
             event.stopPropagation();

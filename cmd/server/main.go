@@ -18,6 +18,7 @@ func main() {
     // Setup handler for processing related endpoints
     http.HandleFunc("/upload", httpHandler.HandleFileUpload)
     http.HandleFunc("/status", httpHandler.HandleStatus)
+    http.HandleFunc("/counter", httpHandler.HandleCounter)
 
     // Serve static files
     fs := http.FileServer(http.Dir("./web/static"))
