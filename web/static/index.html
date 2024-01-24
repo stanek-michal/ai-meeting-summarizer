@@ -112,6 +112,7 @@
 	    const formData = new FormData();
 	    formData.append('file', file);
 	    uploadProgress.classList.remove('hidden');
+	    saveButton.classList.add('hidden');
 	    statusMessage.classList.remove('hidden');
 	    statusMessage.innerText = 'Uploading...';
 
