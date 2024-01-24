@@ -78,6 +78,8 @@
 		'https://i.kym-cdn.com/photos/images/original/000/059/601/spiderman116_spideydancing1.gif',
 		'https://i.gifer.com/UwPC.gif',
 		'https://j.gifs.com/Rgk1LR.gif',
+		'https://i.gifer.com/YQDs.gif',
+		'https://i.gifer.com/XwI7.gif'
         ];
 
         dropArea.addEventListener('dragover', (event) => {
@@ -100,6 +102,7 @@
 	    const fileExtension = fileName.slice(((fileName.lastIndexOf(".") - 1) >>> 0) + 2).toLowerCase();
 	    if (fileExtension !== 'wav' && fileExtension !== 'mp4') {
 		statusMessage.innerText = 'Error: Only .wav and .mp4 files are allowed!';
+	        console.log('Error: incorrect file extension: ' + fileName)
 		statusMessage.classList.remove('hidden');
 		return;
 	    }
@@ -140,9 +143,11 @@
                        checkTaskStatus(response.task_id); // Start checking status
                     } else {
                        statusMessage.innerText = 'Error: failed to get task_id. Please try again.';
+		       console.log('Error: failed to get task_id')
                    }
                 } else {
                     statusMessage.innerText = 'Error: upload failed - status code: ' + xhr.status + '. Please try again.';
+		    console.log('Error: upload failed - status code: ' + xhr.status)
                 }
             };
 
@@ -159,7 +164,7 @@
             fetch(`/status?id=${taskId}`)
             .then(response => response.json())
             .then(data => {
-                if (data.Status === 'processing') {
+                if (data.Status === 'processing' || data.Status === 'processing') {
 		    statusMessage.innerText = 'Processing...';
                     setTimeout(() => checkTaskStatus(taskId), 2000);
                 } else if (data.Status === 'completed') {
@@ -173,7 +178,8 @@
                         download('summary.txt', data.Result.Summary);
                     };
                 } else {
-                    statusMessage.innerText = `Error: ${data.Result}`;
+                    statusMessage.innerText = 'Error: ${data.Summary}';
+		    console.log('Error: upload failed: ' + data.Summary)
                     dancingChicken.style.display = 'none'; // Hide the dancing chicken gif in case of error
                 }
             })
