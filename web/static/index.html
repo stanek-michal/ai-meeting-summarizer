@@ -164,7 +164,7 @@
             fetch(`/status?id=${taskId}`)
             .then(response => response.json())
             .then(data => {
-                if (data.Status === 'processing' || data.Status === 'processing') {
+                if (data.Status === 'processing' || data.Status === 'waiting') {
 		    statusMessage.innerText = 'Processing...';
                     setTimeout(() => checkTaskStatus(taskId), 2000);
                 } else if (data.Status === 'completed') {
@@ -178,8 +178,8 @@
                         download('summary.txt', data.Result.Summary);
                     };
                 } else {
-                    statusMessage.innerText = 'Error: ${data.Summary}';
-		    console.log('Error: upload failed: ' + data.Summary)
+                    statusMessage.innerText = 'Error: ${data.Result.ErrorMsg}';
+		    console.log('Error: upload failed: ' + data.Result.ErrorMsg)
                     dancingChicken.style.display = 'none'; // Hide the dancing chicken gif in case of error
                 }
             })

@@ -2,100 +2,150 @@ package queue
 
 import (
 	"fmt"
-	"github.com/stanek-michal/go-ai-summarizer/internal/processing"
+	"strconv"
 	"sync"
+	"github.com/stanek-michal/go-ai-summarizer/internal/processing"
+	"github.com/stanek-michal/go-ai-summarizer/pkg/types"
 )
-
-// Result contains a full transcript and a text summary of it
-type Result struct {
-	Transcript string
-	Summary    string
-}
-// Task represents a processing task
-type Task struct {
-	ID     string
-	Status string
-	Result Result
-}
 
 // Queue represents a queue of tasks to be processed
 type Queue struct {
-	tasks      map[string]*Task
-	processing chan struct{}
+	taskLookup map[int]*types.Task    // For task status lookup
+	taskQueue []*types.Task           // FIFO queue to maintain order and garbage collect old unclaimed tasks
+	processing chan *types.Task       // enqueue tasks for processing
+	lastID     int                    // last ID that was used for a task - ever incrementing counter
 	mu         sync.Mutex
 	processor  *processing.Processor
 }
 
 func NewQueue() *Queue {
 	return &Queue{
-		tasks:      make(map[string]*Task),
-		processing: make(chan struct{}, 1), // Limit to 1 as AI engine can process one thing at a time
+		taskLookup: make(map[int]*types.Task),
+		taskQueue:  make([]*types.Task, 0),
+		processing: make(chan *types.Task, 1), // Limit to 1 as AI engine can process one thing at a time
+		lastID:     0,
 		processor:  processing.NewProcessor(),
 	}
 }
 
-// StartProcessing starts the processing of tasks in the queue
+// StartProcessing processes one task at a time in infinite loop
 func (q *Queue) StartProcessing() {
-	for {
+	for task := range q.processing {
+		filename := ""
 		q.mu.Lock()
-		var taskToProcess *Task
-		for _, task := range q.tasks {
-			if task.Status == "waiting" {
-				taskToProcess = task
-				task.Status = "processing"
-				break
-			}
-		}
+		filename = task.FileName
+		task.Status = "processing"
 		q.mu.Unlock()
 
-		if taskToProcess != nil {
-			// Process the task
-			result, err := q.processor.Process("") // Replace nil with the actual file reader
-			q.mu.Lock()
-			if err != nil {
-				taskToProcess.Status = "failed"
-				taskToProcess.Result.Summary = err.Error()
-				taskToProcess.Result.Transcript = err.Error()
-			} else {
-				taskToProcess.Status = "completed"
-				taskToProcess.Result.Summary = result
-				taskToProcess.Result.Transcript = result
-			}
-			q.mu.Unlock()
+		result, err := q.processor.Process(filename)
+
+		q.mu.Lock()
+		task.Result = result
+		if err != nil {
+			task.Status = "failed"
 		} else {
-			// No tasks to process, wait for a new task
-			<-q.processing
+			task.Status = "completed"
 		}
+		q.mu.Unlock()
 	}
 }
 
 // Enqueue adds a new task to the queue
-func (q *Queue) Enqueue(fileName string) (string, error) {
+func (q *Queue) Enqueue(fileName string) (int, error) {
+	// Garbage collect old completed entries if we accumulated too many
+	q.GarbageCollectOldEntries()
+
 	q.mu.Lock()
-	defer q.mu.Unlock()
 
 	// Generate a unique identifier for the task
-	taskID := fmt.Sprintf("task-%d", len(q.tasks)+1)
-	q.tasks[taskID] = &Task{ID: taskID, Status: "waiting"}
-
-	// Notify the processing loop that there is a new task
-	select {
-		case q.processing <- struct{}{}: // Notify if the channel is empty
-		default: // Do nothing if there's already a notification pending
+        q.lastID++
+	taskID := q.lastID
+	task := &types.Task{
+		ID:       strconv.Itoa(taskID),
+		FileName: fileName,
+		Status:   "waiting",
 	}
+	q.taskQueue = append(q.taskQueue, task)
+	q.taskLookup[taskID] = task
+	q.mu.Unlock()
+
+	// Send task to processor channel
+	go func() {
+		q.processing <- task
+	}()
 
 	return taskID, nil
 }
 
-// Status returns the status of a task by its ID
-func (q *Queue) Status(taskID string) (*Task, error) {
+// Cleanup a task by ID (only if its status is "completed" or "failed")
+func (q *Queue) Cleanup(taskID int) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 
-	task, exists := q.tasks[taskID]
+	task, ok := q.taskLookup[taskID]
+	if !ok {
+		return // Task not found
+	}
+
+	// Check if the task is completed before removing it
+	if task.Status == "completed" || task.Status == "failed" {
+		// Remove from taskLookup
+		delete(q.taskLookup, taskID)
+		// Remove from taskQueue
+		for i, t := range q.taskQueue {
+			if t.ID == strconv.Itoa(taskID) {
+				q.taskQueue = append(q.taskQueue[:i], q.taskQueue[i+1:]...)
+				break
+			}
+		}
+	}
+}
+
+// Garbage collect old completed/failed entries if unclaimed by clients
+func (q *Queue) GarbageCollectOldEntries() {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
+	if len(q.taskQueue) < 50 {
+		return // Not enough to garbage collect yet
+	}
+	if q.taskQueue[0].Status == "waiting" || q.taskQueue[0].Status == "processing" {
+		return // No completed entries
+	}
+	var completedEntries []int
+	for _, entry := range q.taskQueue {
+		if entry.Status == "waiting" || entry.Status == "processing" {
+			break
+		} else {
+			idNum, err := strconv.Atoi(entry.ID)
+			if err != nil {
+				panic("error converting ID to integer")
+			}
+			completedEntries = append(completedEntries, idNum)
+		}
+	}
+	if len(completedEntries) < 10 {
+		return // Not enough accumulated yet
+	}
+	entriesToCleanup := completedEntries[:len(completedEntries)/2]
+	for _, entryID := range entriesToCleanup {
+		// Remove from taskLookup
+		delete(q.taskLookup, entryID)
+	}
+	// Truncate entries from front of queue
+	q.taskQueue = q.taskQueue[len(entriesToCleanup):]
+}
+
+// Returns the task info (status and result) by its ID
+func (q *Queue) GetTaskInfo(taskID int) (*types.Task, error) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	task, exists := q.taskLookup[taskID]
+
 	if !exists {
 		return nil, fmt.Errorf("task not found")
 	}
+	localTask := *task
 
-	return task, nil
+	return &localTask, nil
 }

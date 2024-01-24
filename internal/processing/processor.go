@@ -4,6 +4,7 @@ import (
 	"log"
 //	"os/exec"
 	"time"
+        "github.com/stanek-michal/go-ai-summarizer/pkg/types"
 )
 
 type Processor struct{}
@@ -13,7 +14,7 @@ func NewProcessor() *Processor {
 }
 
 // Do processing on input file
-func (p *Processor) Process(fileName string) (string, error) {
+func (p *Processor) Process(fileName string) (types.Result, error) {
 	// Replace this with actual processing logic
 	// For now, it just simulates processing time
 	time.Sleep(15 * time.Second)
@@ -28,8 +29,10 @@ func (p *Processor) Process(fileName string) (string, error) {
 
 	if err != nil {
 		log.Printf("Error processing file: %v", err)
-		return "", err
+		return types.Result{}, err
 	}
 
-	return string(output), nil
+	// TODO fill in Transcript, Summary, ErrorMsg
+	result := types.Result{Summary: string(output) + ": summary", Transcript: string(output) + ": transcript", ErrorMsg: "errormsg"}
+	return result, nil
 }

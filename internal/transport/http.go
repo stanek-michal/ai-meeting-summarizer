@@ -6,6 +6,7 @@ import (
     "io"
     "os"
     "strings"
+    "strconv"
     "net/http"
     "github.com/stanek-michal/go-ai-summarizer/pkg/queue"
 )
@@ -87,7 +88,7 @@ func (h *HTTPHandler) HandleFileUpload(w http.ResponseWriter, r *http.Request) {
 
     // Respond with the task ID
     w.WriteHeader(http.StatusAccepted)
-    json.NewEncoder(w).Encode(map[string]string{"task_id": taskID})
+    json.NewEncoder(w).Encode(map[string]string{"task_id": strconv.Itoa(taskID)})
 }
 
 func (h *HTTPHandler) HandleStatus(w http.ResponseWriter, r *http.Request) {
@@ -99,13 +100,22 @@ func (h *HTTPHandler) HandleStatus(w http.ResponseWriter, r *http.Request) {
     }
 
     // Get the task status
-    status, err := h.Queue.Status(taskID)
+    idNum, err := strconv.Atoi(taskID)
     if err != nil {
         http.Error(w, "Invalid task ID", http.StatusBadRequest)
         return
     }
+    taskInfo, err := h.Queue.GetTaskInfo(idNum)
+    if err != nil {
+        http.Error(w, "Invalid task ID", http.StatusBadRequest)
+        return
+    }
+    if taskInfo.Status == "completed" || taskInfo.Status == "failed" {
+	// Can be removed from the queue now - client is getting result
+        h.Queue.Cleanup(idNum)
+    }
 
     // Respond with the task status
     w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(status)
+    json.NewEncoder(w).Encode(taskInfo)
 }
