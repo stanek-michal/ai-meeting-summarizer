@@ -34,7 +34,7 @@ func (h *HTTPHandler) HandleFileUpload(w http.ResponseWriter, r *http.Request) {
     // Parse the multipart form
     if err := r.ParseMultipartForm(maxUploadSize); err != nil {
         // Handle the case where the file is too large to fit in memory
-        if err == http.ErrHandlerTimeout {
+        if err == http.ErrHandlerTimeout { // TODO this is probably wrong
             http.Error(w, "The uploaded file is too large", http.StatusRequestEntityTooLarge)
         } else {
             http.Error(w, "Error parsing multipart form", http.StatusInternalServerError)

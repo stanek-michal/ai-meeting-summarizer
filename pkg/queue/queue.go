@@ -29,7 +29,7 @@ type Queue struct {
 func NewQueue() *Queue {
 	return &Queue{
 		tasks:      make(map[string]*Task),
-		processing: make(chan struct{}, 1),
+		processing: make(chan struct{}, 1), // Limit to 1 as AI engine can process one thing at a time
 		processor:  processing.NewProcessor(),
 	}
 }
