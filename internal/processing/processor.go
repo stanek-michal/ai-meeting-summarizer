@@ -1,7 +1,6 @@
 package processing
 
 import (
-	"io"
 	"log"
 //	"os/exec"
 	"time"
@@ -13,9 +12,8 @@ func NewProcessor() *Processor {
 	return &Processor{}
 }
 
-// Process is a stub for the actual processing of the WAV file.
-// It should run the system command that processes the file.
-func (p *Processor) Process(file io.Reader) (string, error) {
+// Do processing on input file
+func (p *Processor) Process(fileName string) (string, error) {
 	// Replace this with actual processing logic
 	// For now, it just simulates processing time
 	time.Sleep(15 * time.Second)

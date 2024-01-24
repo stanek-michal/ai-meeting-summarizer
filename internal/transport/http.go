@@ -3,7 +3,9 @@ package transport
 import (
     "encoding/json"
 //    "fmt"
- //   "io"
+    "io"
+    "os"
+    "strings"
     "net/http"
     "github.com/stanek-michal/go-ai-summarizer/pkg/queue"
 )
@@ -40,15 +42,44 @@ func (h *HTTPHandler) HandleFileUpload(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    file, _, err := r.FormFile("file")
+    file, header, err := r.FormFile("file")
     if err != nil {
         http.Error(w, "Invalid file", http.StatusBadRequest)
         return
     }
     defer file.Close()
 
-    // Enqueue the file processing task
-    taskID, err := h.Queue.Enqueue(file)
+    var suffix string
+    // Check file type (must be .wav or .mp4)
+    if strings.HasSuffix(header.Filename, ".wav") {
+       suffix = "wav"
+    } else if strings.HasSuffix(header.Filename, ".mp4") {
+       suffix = "mp4"
+    } else {
+        http.Error(w, "File must be a .wav or .mp4", http.StatusBadRequest)
+        return
+    }
+
+    // Create a temporary file on the disk to save the uploaded content
+    tempFile, err := os.CreateTemp("", "upload-*." + suffix)
+    if err != nil {
+        http.Error(w, "Failed to create temp file", http.StatusInternalServerError)
+        return
+    }
+    defer tempFile.Close()
+
+    // Copy the contents of the uploaded file to the temp file
+    _, err = io.Copy(tempFile, file)
+    if err != nil {
+        http.Error(w, "Failed to save file", http.StatusInternalServerError)
+        return
+    }
+
+    // The path to the temp file
+    filePath := tempFile.Name()
+
+    // Enqueue the file path for processing
+    taskID, err := h.Queue.Enqueue(filePath)
     if err != nil {
         http.Error(w, "Error processing file", http.StatusInternalServerError)
         return

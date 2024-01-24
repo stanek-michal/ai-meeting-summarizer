@@ -2,7 +2,6 @@ package queue
 
 import (
 	"fmt"
-	"io"
 	"github.com/stanek-michal/go-ai-summarizer/internal/processing"
 	"sync"
 )
@@ -51,14 +50,16 @@ func (q *Queue) StartProcessing() {
 
 		if taskToProcess != nil {
 			// Process the task
-			result, err := q.processor.Process(nil) // Replace nil with the actual file reader
+			result, err := q.processor.Process("") // Replace nil with the actual file reader
 			q.mu.Lock()
 			if err != nil {
 				taskToProcess.Status = "failed"
-				taskToProcess.Result = err.Error()
+				taskToProcess.Result.Summary = err.Error()
+				taskToProcess.Result.Transcript = err.Error()
 			} else {
 				taskToProcess.Status = "completed"
-				taskToProcess.Result = result
+				taskToProcess.Result.Summary = result
+				taskToProcess.Result.Transcript = result
 			}
 			q.mu.Unlock()
 		} else {
@@ -69,7 +70,7 @@ func (q *Queue) StartProcessing() {
 }
 
 // Enqueue adds a new task to the queue
-func (q *Queue) Enqueue(file io.Reader) (string, error) {
+func (q *Queue) Enqueue(fileName string) (string, error) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 
