@@ -1,4 +1,13 @@
+Install Go:
 wget https://go.dev/dl/go1.21.6.linux-amd64.tar.gz
 rm -rf /usr/local/go && tar -C /usr/local -xzf go1.21.6.linux-amd64.tar.gz
 
+Install ffmpeg:
 sudo apt install ffmpeg
+
+Install whisperx, make sure its in PATH:
+https://github.com/m-bain/whisperX
+
+Run HTTP server on localhost:9001:
+go build -o summarizer_server cmd/server/main.go
+./summarizer_server
