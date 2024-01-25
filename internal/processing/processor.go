@@ -132,16 +132,28 @@ func generateTranscript(filePath string) (string, string, error) {
 }
 
 func killKoboldcpp(koboldProcess *os.Process) error {
-	// Kill -9 koboldcpp to reclaim VRAM
-	if err := koboldProcess.Kill(); err != nil {
-		log.Fatalf("Failed to kill process: %v", err)
-		return errors.New("Could not kill koboldcpp")
+	// Get the process group ID (PGID), which is the same as the PID for the leader
+	pgid, err := syscall.Getpgid(koboldProcess.Pid)
+	if err != nil {
+		log.Printf("syscall.Getpgid() failed with %s\n", err)
+		return errors.New("could not get pgid of koboldcpp")
 	}
+	log.Printf("Attempting to kill koboldcpp with PID: %d and PGID: %d", koboldProcess.Pid, pgid)
+
+	// Kill koboldcpp process group to reclaim VRAM
+	if err := syscall.Kill(-pgid, syscall.SIGTERM); err != nil {
+		log.Printf("syscall.Kill() failed with %s\n", err)
+		return errors.New("could not kill koboldcpp")
+	}
+	log.Println("Kill signal sent successfully")
 
 	// Wait for the process to finish to avoid zombies
 	if _, err := koboldProcess.Wait(); err != nil {
 		log.Printf("Process exited with error: %v", err)
+	} else {
+		log.Println("Process wait completed without error")
 	}
+
 	return nil
 }
 
@@ -150,7 +162,8 @@ func generateSummary(transcript string, transcriptFilepath string) (string, erro
 	// Open the os.DevNull device
 	devNull, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0)
 	if err != nil {
-		log.Fatalf("Failed to open %s: %v", os.DevNull, err)
+		log.Printf("Failed to open %s: %v", os.DevNull, err)
+		return "", err
 	}
 	defer devNull.Close()
 
@@ -165,12 +178,20 @@ func generateSummary(transcript string, transcriptFilepath string) (string, erro
 		"--skiplauncher",
 		"--multiuser", "5",
 		"--model", "/home/ubuntu/koboldcpp/models/mixtral-8x7b-instruct-v0.1.Q4_K_M.gguf")
+
+	// Set the process to run in its own new process group so we can kill its children later
+	koboldcmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+	}
+
 	koboldcmd.Stdout = devNull // Redirect stdout to /dev/null
 	koboldcmd.Stderr = devNull // Redirect stderr to /dev/null
 
 	if err := koboldcmd.Start(); err != nil {
-		log.Fatalf("Failed to start daemon: %v", err)
+		log.Printf("Failed to start daemon: %v", err)
+		return "", err
 	}
+	log.Printf("Started koboldcpp with PID: %d", koboldcmd.Process.Pid)
 
 	// Periodically call koboldcpp HTTP API to check if server is initialized
 	apiURL := "http://localhost:5001/api/v1/model"
@@ -226,6 +247,7 @@ func generateSummary(transcript string, transcriptFilepath string) (string, erro
 
 // Do processing on input file (usually /tmp/upload-<randomhexstring>.wav or .mp4 or .vtt)
 func (p *Processor) Process(filePath string) (types.Result, error) {
+	log.Printf("Running Process() for: %v", filePath)
 	// Get basename and extension
 	baseFilename := filepath.Base(filePath)
 	extension := filepath.Ext(baseFilename)
@@ -237,6 +259,7 @@ func (p *Processor) Process(filePath string) (types.Result, error) {
 	}
 
 	if extension == ".mp4" {
+		log.Printf("Converting %v to .wav", filePath)
 		convertedFilePath, err := convertToWav(filePath)
 		if err != nil {
 			log.Printf("Conversion to .wav failed, error: %v", err)
@@ -246,11 +269,13 @@ func (p *Processor) Process(filePath string) (types.Result, error) {
 		extension = ".wav"
 	}
 	if extension == ".wav" {
+		log.Printf("Generating transcript for %v", filePath)
 		transcript, transcriptFilepath, err := generateTranscript(filePath)
 		if err != nil {
 			log.Printf("Transcript generation failed, error: %v", err)
 			return types.Result{ErrorMsg: err.Error()}, err
 		}
+		log.Printf("Generating summary for %v", transcriptFilepath)
 		summary, err := generateSummary(transcript, transcriptFilepath)
 		if err != nil {
 			log.Printf("Summary generation failed, error: %v", err)
@@ -262,6 +287,7 @@ func (p *Processor) Process(filePath string) (types.Result, error) {
 			Summary:    summary,
 			ErrorMsg:   "",
 		}
+		log.Printf("Generated summary for %v", transcriptFilepath)
 		return result, nil
 	} else {
 		log.Printf("Unknown extension: %v", extension);

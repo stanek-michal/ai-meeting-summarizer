@@ -218,7 +218,7 @@
                         download('summary.txt', data.Result.Summary);
                     };
                 } else {
-                    statusMessage.innerText = 'Error: ${data.Result.ErrorMsg}';
+                    statusMessage.innerText = 'Error: ' + data.Result.ErrorMsg;
 		    console.log('Error: upload failed: ' + data.Result.ErrorMsg)
                     dancingChicken.style.display = 'none'; // Hide the dancing chicken gif in case of error
                 }

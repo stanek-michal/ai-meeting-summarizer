@@ -5,8 +5,15 @@ rm -rf /usr/local/go && tar -C /usr/local -xzf go1.21.6.linux-amd64.tar.gz
 Install ffmpeg:
 sudo apt install ffmpeg
 
+Install koboldcpp:
+sudo curl -fLo /usr/bin/koboldcpp https://koboldai.org/cpplinux && sudo chmod +x /usr/bin/koboldcpp
+
+
 Install whisperx, make sure its in PATH:
 https://github.com/m-bain/whisperX
+
+activate whisperx environment:
+conda activate whisperx
 
 Run HTTP server on localhost:9001:
 go build -o summarizer_server cmd/server/main.go
