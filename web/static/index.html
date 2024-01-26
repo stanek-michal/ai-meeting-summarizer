@@ -5,8 +5,11 @@
     <title>AI Meeting Summarizer</title>
     <style>
         body {
-            background-image: url('background.jpg');
-            background-size: cover;
+            /*background-image: url('background.jpg');*/
+            background-image: url('tile.jpg');
+/*            background-size: cover;*/
+	    background-repeat: repeat;
+
         }
 	.speaker-icon img {
 	    width: 24px; /* Adjust based on your preference */
@@ -26,6 +29,37 @@
     box-shadow: 3px 3px #000; /* Add a shadow to the button for a 3D effect */
     display: inline-block;
     transform: rotate(-5deg); /* Slightly rotate the button for a quirky look */
+}
+	.bottom-left {
+    /* Positions the GIF at the bottom left corner */
+    position: absolute;
+    left: 10%;
+    bottom: 10%;
+}
+	.top-left {
+    /* Positions the GIF at the top left corner */
+    position: absolute;
+    left: 10%;
+    top: 7%;
+}
+	.top-right {
+    /* Positions the GIF at the top left corner */
+    position: absolute;
+    right: 10%;
+    top: 7%;
+}
+	.cat {
+    /* Positions the GIF at the top left corner */
+    position: absolute;
+    right: 17%;
+    bottom: 30%;
+}
+	.bottom-center {
+    /* Centers the GIF at the bottom */
+    position: absolute;
+    left: 50%;
+    bottom: 2%;
+    transform: translateX(-50%);
 }
 	.play-button {
 	    background-color: #008080;
@@ -127,9 +161,11 @@
 </head>
 <body>
 
+    <img src="yellow_spinning.gif" alt="Gif 3" class="top-left">
     <div class="wordart-container">
        <div class="wordart rainbow" ><span class="text">AI Meeting Summarizer</span></div>
     </div>
+    <img src="yellow_spinning.gif" alt="Gif 3" class="top-right">
     <div id="drop-area">
         <p id="drop-message">Drag and drop a .wav or .mp4 file here</p>
     </div>
@@ -143,6 +179,7 @@
     </div>
     <audio id="midiPlayer"></audio>
     <img id="file-transfer" alt="File Transfer"/>
+    <img src="cat.png" alt="Gif 3" class="cat">
     <img id="dancing-chicken" alt="Dancing Chicken"/>
     <div id="visitor-counter" >
 	    <img src="0.gif" id="digit1">
@@ -150,6 +187,8 @@
 	    <img src="0.gif" id="digit3">
 	    <img src="0.gif" id="digit4">
     </div>
+    <img src="dino.gif" alt="Gif 4" class="bottom-left">
+    <img src="construction.gif" alt="Gif 3" class="bottom-center">
 
     <script>
         const dropArea = document.getElementById('drop-area');
@@ -310,7 +349,7 @@
 		    statusMessage.innerText = 'Processing...';
 		    updateQueueLength();
 		    queueLengthMessage.classList.remove('hidden');
-                    setTimeout(() => checkTaskStatus(taskId), 2000);
+                    setTimeout(() => checkTaskStatus(taskId), 5000);
                 } else if (data.Status === 'completed') {
                     uploadProgress.value = 100; 
                     statusMessage.innerText = 'Processing complete.';
