@@ -8,6 +8,25 @@
             background-image: url('background.jpg');
             background-size: cover;
         }
+	.speaker-icon img {
+	    width: 24px; /* Adjust based on your preference */
+	    height: 24px; /* Adjust based on your preference */
+	    image-rendering: pixelated; /* Keep the retro, pixelated look */
+	}
+	.retro-button {
+	    image-rendering: pixelated; /* Keep the retro, pixelated look */
+    background-color: #008080;
+    color: white;
+    padding: 10px 20px;
+    border: 2px solid #000; /* Add a solid black border */
+    cursor: pointer;
+    font-size: 16px;
+    font-family: 'Courier New', Courier, monospace; /* Use a monospaced font for retro feel */
+    text-shadow: 1px 1px #000; /* Give some depth with text shadow */
+    box-shadow: 3px 3px #000; /* Add a shadow to the button for a 3D effect */
+    display: inline-block;
+    transform: rotate(-5deg); /* Slightly rotate the button for a quirky look */
+}
 	.play-button {
 	    background-color: #008080;
 	    color: white;
@@ -119,7 +138,9 @@
     <p id="queueLengthMessage" class="status-message hidden"></p>
     <button id="saveTranscriptButton" class="saveButton" style="display:none;">Save Transcript</button>
     <button id="saveSummaryButton" class="saveButton" style="display:none;">Save Summary</button>
-    <button id="playMidi" class="play-button">🔊 Play MIDI</button>
+    <div id="playMidi" class="retro-button">
+    <img src="play-icon.png" alt="Play MIDI" class="speaker-icon"> Play MIDI
+    </div>
     <audio id="midiPlayer"></audio>
     <img id="file-transfer" alt="File Transfer"/>
     <img id="dancing-chicken" alt="Dancing Chicken"/>
@@ -142,7 +163,8 @@
 	const saveTranscriptButton = document.getElementById('saveTranscriptButton');
 	const saveSummaryButton = document.getElementById('saveSummaryButton');
 	const playButton = document.getElementById('playMidi');
-	const audioPlayer = document.getElementById('midiPlayer');
+	const midiPlayer = document.getElementById('midiPlayer');
+        const icon = playButton.querySelector('.speaker-icon'); // Get the icon inside the playButton
 	let isPlaying = false;
 	saveTranscriptButton.style.display = 'none'; // Initially hide buttons
 	saveSummaryButton.style.display = 'none';
@@ -163,7 +185,14 @@
 		'https://i.gifer.com/XwI7.gif'
         ];
         const audioFiles = [
-            'https://archive.org/download/HenryManciniBabyElephantWalk_201901/Henry%20Mancini%20-%20Baby%20Elephant%20Walk.mp3',
+            //'https://archive.org/download/HenryManciniBabyElephantWalk_201901/Henry%20Mancini%20-%20Baby%20Elephant%20Walk.mp3',
+	    '1.mp3',
+	    '2.mp3',
+	    '3.mp3',
+	    '4.mp3',
+	    '5.mp3',
+	    '6.mp3',
+	    '7.mp3',
         ];
 
         function updateVisitorCounter() {
@@ -338,23 +367,22 @@
             document.body.removeChild(element);
         }
         playButton.addEventListener('click', function() {
-           if (!isPlaying) {
-               // Randomly select an audio file URL
-               const randomAudioUrl = audioFiles[Math.floor(Math.random() * audioFiles.length)];
-               audioPlayer.src = randomAudioUrl;
-               audioPlayer.play().then(() => {
-                   playButton.textContent = "⏸️ Pause";
-                   isPlaying = true;
-               }).catch((error) => {
-                   console.error("Error playing the audio file.", error);
-                   // Handle error (e.g., user didn't interact with the document before audio tried to play)
-                   alert("Failed to play audio. Please try clicking the button again.");
-               });
-           } else {
-               audioPlayer.pause();
-               playButton.textContent = "🔊 Play MIDI";
-               isPlaying = false;
-           }
+            if (!isPlaying) {
+                // Randomly select a MIDI file
+                const randomMidi = audioFiles[Math.floor(Math.random() * audioFiles.length)];
+                midiPlayer.src = randomMidi;
+                midiPlayer.play();
+                icon.src = "pause-icon.png"; // Change to pause icon
+                playButton.textContent = " Pause MIDI"; // Adjust the text accordingly
+                playButton.insertBefore(icon, playButton.firstChild); // Reinsert the icon to keep it in front
+                isPlaying = true;
+            } else {
+                midiPlayer.pause();
+                icon.src = "play-icon.png"; // Change to play icon
+                playButton.textContent = " Play MIDI"; // Adjust the text accordingly
+                playButton.insertBefore(icon, playButton.firstChild); // Ensure icon remains at the start of the button
+                isPlaying = false;
+            }
         });
 
     </script>
