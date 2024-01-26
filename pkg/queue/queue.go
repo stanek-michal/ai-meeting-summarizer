@@ -149,3 +149,10 @@ func (q *Queue) GetTaskInfo(taskID int) (*types.Task, error) {
 
 	return &localTask, nil
 }
+
+func (q *Queue) GetQueueLength() (int, error) {
+    q.mu.Lock()
+    defer q.mu.Unlock()
+
+    return len(q.taskQueue), nil
+}

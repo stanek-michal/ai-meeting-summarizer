@@ -108,6 +108,7 @@
     </div>
     <progress id="uploadProgress" value="0" max="100" class="hidden"></progress>
     <p id="statusMessage" class="status-message hidden"></p>
+    <p id="queueLengthmessage" class="status-message hidden"></p>
     <button id="saveTranscriptButton" class="saveButton" style="display:none;">Save Transcript</button>
     <button id="saveSummaryButton" class="saveButton" style="display:none;">Save Summary</button>
     <img id="file-transfer" alt="File Transfer"/>
@@ -124,6 +125,7 @@
         const dropMessage = document.getElementById('drop-message');
         const uploadProgress = document.getElementById('uploadProgress');
         const statusMessage = document.getElementById('statusMessage');
+        const queueLengthMessage = document.getElementById('queueLengthMessage');
         const dancingChicken = document.getElementById('dancing-chicken');
         const fileTransferAnim = document.getElementById('file-transfer');
         const visitorcounter = document.getElementById('visitor-counter');
@@ -207,6 +209,7 @@
 	    saveTranscriptButton.style.display = 'none';
             saveSummaryButton.style.display = 'none';
 	    statusMessage.classList.remove('hidden');
+	    queueLengthMessage.classList.add('hidden');
 	    statusMessage.innerText = 'Uploading...';
 
             const xhr = new XMLHttpRequest();
@@ -260,10 +263,13 @@
             .then(data => {
                 if (data.Status === 'processing' || data.Status === 'waiting') {
 		    statusMessage.innerText = 'Processing...';
+		    updateQueueLength();
+		    queueLengthMessage.classList.remove('hidden');
                     setTimeout(() => checkTaskStatus(taskId), 2000);
                 } else if (data.Status === 'completed') {
                     uploadProgress.value = 100; 
                     statusMessage.innerText = 'Processing complete.';
+		    queueLengthMessage.classList.add('hidden');
                     dancingChicken.style.display = 'none'; // Hide the dancing chicken gif on complete
 	            saveTranscriptButton.style.display = 'inline'; // Show buttons when ready
                     saveSummaryButton.style.display = 'inline';
@@ -285,6 +291,23 @@
                 console.error('Error:', error);
             });
         }
+
+	function updateQueueLength() {
+	    fetch('/tasksInQueue')
+	    .then(response => response.json())
+	    .then(data => {
+		const queueLengthMessage = document.getElementById('queueLengthMessage');
+	        if(data.tasks_in_queue > 0) {
+		    queueLengthMessage.innerText = `(${data.tasks_in_queue} users in queue)`;
+		    queueLengthMessage.style.display = ''; // Make sure it's visible if it was previously hidden
+		} else {
+		    queueLengthMessage.style.display = 'none'; // Hide the message if no users are in queue
+		}
+	    })
+	    .catch(error => {
+		console.error('Error:', error);
+	    });
+	}
 
         function download(filename, text) {
             const element = document.createElement('a');

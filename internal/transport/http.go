@@ -192,3 +192,15 @@ func (h *HTTPHandler) HandleCounter(w http.ResponseWriter, r *http.Request) {
     }
     fmt.Fprintf(w, "%d", count)
 }
+
+func (h *HTTPHandler) HandleTasksInQueue(w http.ResponseWriter, r *http.Request) {
+    queueLength, err := h.Queue.GetQueueLength()
+    if err != nil {
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+        return
+    }
+
+    // Respond with the number of tasks in the queue
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]int{"tasks_in_queue": queueLength})
+}
