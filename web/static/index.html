@@ -8,6 +8,14 @@
             background-image: url('background.jpg');
             background-size: cover;
         }
+	.play-button {
+	    background-color: #008080;
+	    color: white;
+	    padding: 10px 20px;
+	    border: none;
+	    cursor: pointer;
+	    font-size: 16px;
+	}
 	.wordart {
 	  font-family: Arial, sans-serif;
 	  font-size: 4em;
@@ -111,6 +119,8 @@
     <p id="queueLengthMessage" class="status-message hidden"></p>
     <button id="saveTranscriptButton" class="saveButton" style="display:none;">Save Transcript</button>
     <button id="saveSummaryButton" class="saveButton" style="display:none;">Save Summary</button>
+    <button id="playMidi" class="play-button">🔊 Play MIDI</button>
+    <audio id="midiPlayer"></audio>
     <img id="file-transfer" alt="File Transfer"/>
     <img id="dancing-chicken" alt="Dancing Chicken"/>
     <div id="visitor-counter" >
@@ -131,6 +141,9 @@
         const visitorcounter = document.getElementById('visitor-counter');
 	const saveTranscriptButton = document.getElementById('saveTranscriptButton');
 	const saveSummaryButton = document.getElementById('saveSummaryButton');
+	const playButton = document.getElementById('playMidi');
+	const audioPlayer = document.getElementById('midiPlayer');
+	let isPlaying = false;
 	saveTranscriptButton.style.display = 'none'; // Initially hide buttons
 	saveSummaryButton.style.display = 'none';
 
@@ -148,6 +161,9 @@
 		'https://j.gifs.com/Rgk1LR.gif',
 		'https://i.gifer.com/YQDs.gif',
 		'https://i.gifer.com/XwI7.gif'
+        ];
+        const audioFiles = [
+            'https://archive.org/download/HenryManciniBabyElephantWalk_201901/Henry%20Mancini%20-%20Baby%20Elephant%20Walk.mp3',
         ];
 
         function updateVisitorCounter() {
@@ -321,6 +337,25 @@
 
             document.body.removeChild(element);
         }
+        playButton.addEventListener('click', function() {
+           if (!isPlaying) {
+               // Randomly select an audio file URL
+               const randomAudioUrl = audioFiles[Math.floor(Math.random() * audioFiles.length)];
+               audioPlayer.src = randomAudioUrl;
+               audioPlayer.play().then(() => {
+                   playButton.textContent = "⏸️ Pause";
+                   isPlaying = true;
+               }).catch((error) => {
+                   console.error("Error playing the audio file.", error);
+                   // Handle error (e.g., user didn't interact with the document before audio tried to play)
+                   alert("Failed to play audio. Please try clicking the button again.");
+               });
+           } else {
+               audioPlayer.pause();
+               playButton.textContent = "🔊 Play MIDI";
+               isPlaying = false;
+           }
+        });
 
     </script>
 
