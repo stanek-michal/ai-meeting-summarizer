@@ -70,10 +70,10 @@ RUN pip install git+https://github.com/m-bain/whisperx.git
 WORKDIR /summarizer
 
 # Copy the current directory contents into the container at /app
-COPY . /summarizer
+#COPY . /summarizer
 
 # Build the Go application
-RUN go build -o summarizer_server cmd/server/main.go
+#RUN go build -o summarizer_server cmd/server/main.go
 
 # Expose the port the server will run on
 EXPOSE 9001
@@ -82,5 +82,7 @@ EXPOSE 9001
 VOLUME ["/var/log/summarizer"]
 
 # Run the server and redirect stdout and stderr to a log file
-CMD ./summarizer_server >> /var/log/summarizer/summarizer.log 2>&1
+#CMD ./summarizer_server >> /var/log/summarizer/summarizer.log 2>&1
+
+ENTRYPOINT ["/summarizer/entrypoint.sh"]
 

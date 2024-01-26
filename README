@@ -1,3 +1,5 @@
+MANUAL:
+
 Install Go:
 wget https://go.dev/dl/go1.21.6.linux-amd64.tar.gz
 rm -rf /usr/local/go && tar -C /usr/local -xzf go1.21.6.linux-amd64.tar.gz
@@ -18,3 +20,9 @@ conda activate whisperx
 Run HTTP server on localhost:9001:
 go build -o summarizer_server cmd/server/main.go
 ./summarizer_server
+
+-------------------------------------------------------
+
+DOCKER:
+docker build -t ai_meeting_summarizer .
+docker run --gpus all -d -p 9001:9001 -v ~/go_ai_summarizer:/summarizer -v server_logs:/var/log/summarizer --name summarizer_server  ai_meeting_summarizer
