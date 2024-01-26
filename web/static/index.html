@@ -8,6 +8,40 @@
             background-image: url('background.jpg');
             background-size: cover;
         }
+	.wordart {
+	  font-family: Arial, sans-serif;
+	  font-size: 4em;
+	  font-weight: bold;
+	  position: relative;
+	  z-index: 1;
+	  display: inline-block;
+	  -webkit-font-smoothing: antialiased;
+	  -moz-osx-font-smoothing: grayscale;
+
+	}
+
+	.wordart.rainbow {
+	  transform: scale(1, 1.5);
+	  -webkit-transform: scale(1, 1.5);
+	  -moz-transform: scale(1, 1.5);
+	  -o-transform: scale(1, 1.5);
+	  -ms-transform: scale(1, 1.5);
+	}
+
+	.wordart.rainbow .text {
+	  background: red;
+	  background: -webkit-linear-gradient(left, #b306a9, #ef2667, #f42e2c, #ffa509, #fdfc00, #55ac2f, #0b13fd, #a804af);
+	  background: -o-linear-gradient(left, #b306a9, #ef2667, #f42e2c, #ffa509, #fdfc00, #55ac2f, #0b13fd, #a804af);
+	  background: -moz-linear-gradient(left, #b306a9, #ef2667, #f42e2c, #ffa509, #fdfc00, #55ac2f, #0b13fd, #a804af);
+	  background: linear-gradient(to right, #b306a9, #ef2667, #f42e2c, #ffa509, #fdfc00, #55ac2f, #0b13fd, #a804af);
+	  background-clip: text;
+	  -webkit-background-clip: text;
+	  -webkit-text-fill-color: transparent;
+	}
+        .wordart-container {
+	  text-align: center;
+		margin: 80px auto;
+	}
         #drop-area {
             border: 2px dashed #ccc;
             border-radius: 20px;
@@ -30,14 +64,20 @@
 	    display: none !important;
 
         }
-        #saveButton {
+	.saveButton {
 	    display: block;
-            width: 200px;
-            height: 50px;
-            font-size: 20px;
-            margin: 20px auto; /* Center the button horizontally */
-            cursor: pointer;
-        }
+	    width: 200px;
+	    height: 50px;
+	    font-size: 20px;
+	    margin: 20px auto; /* Center the button horizontally */
+	    cursor: pointer;
+	    background-color: #4CAF50; /* Green */
+	    color: white; /* Text color */
+	    border: none;
+	    border-radius: 5px; /* Rounded corners */
+	    text-align: center;
+	    line-height: 50px; /* Vertically center the text */
+	}
         #file-transfer {
             display: none; /* Hidden by default, will be shown during processing */
             margin: 20px auto;
@@ -60,13 +100,16 @@
 </head>
 <body>
 
-    <h1 style="text-align: center;">AI Meeting Summarizer</h1>
+    <div class="wordart-container">
+       <div class="wordart rainbow" ><span class="text">AI Meeting Summarizer</span></div>
+    </div>
     <div id="drop-area">
-        <p id="drop-message">Drag and drop a .wav file here</p>
+        <p id="drop-message">Drag and drop a .wav or .mp4 file here</p>
     </div>
     <progress id="uploadProgress" value="0" max="100" class="hidden"></progress>
     <p id="statusMessage" class="status-message hidden"></p>
-    <button id="saveButton" class="hidden">Save Result</button>
+    <button id="saveTranscriptButton" class="saveButton" style="display:none;">Save Transcript</button>
+    <button id="saveSummaryButton" class="saveButton" style="display:none;">Save Summary</button>
     <img id="file-transfer" alt="File Transfer"/>
     <img id="dancing-chicken" alt="Dancing Chicken"/>
     <div id="visitor-counter" >
@@ -81,13 +124,21 @@
         const dropMessage = document.getElementById('drop-message');
         const uploadProgress = document.getElementById('uploadProgress');
         const statusMessage = document.getElementById('statusMessage');
-        const saveButton = document.getElementById('saveButton');
         const dancingChicken = document.getElementById('dancing-chicken');
         const fileTransferAnim = document.getElementById('file-transfer');
         const visitorcounter = document.getElementById('visitor-counter');
+	const saveTranscriptButton = document.getElementById('saveTranscriptButton');
+	const saveSummaryButton = document.getElementById('saveSummaryButton');
+	saveTranscriptButton.style.display = 'none'; // Initially hide buttons
+	saveSummaryButton.style.display = 'none';
+
+	/* Global state */
+	const appState = {
+	    originalFileName: ''
+	};
 
 	const gifUrls = [
-		'https://j.gifs.com/mGGxQN.gif',
+	        'https://i.imgur.com/wgwgrrM.gif',
 		'https://gifdb.com/images/high/dope-chicken-dance-with-sunglasses-eyhyk2r1k52mzuh0.gif',
 		'https://www.allyourbasearebelongtous.com/gif/allyourbase.gif',
 		'https://i.kym-cdn.com/photos/images/original/000/059/601/spiderman116_spideydancing1.gif',
@@ -138,6 +189,8 @@
 
 	    // Validate file extension
 	    const fileName = file.name;
+	    appState.originalFileName = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
+
 	    const fileExtension = fileName.slice(((fileName.lastIndexOf(".") - 1) >>> 0) + 2).toLowerCase();
 	    if (fileExtension !== 'wav' && fileExtension !== 'mp4') {
 		statusMessage.innerText = 'Error: Only .wav and .mp4 files are allowed!';
@@ -151,7 +204,8 @@
 	    const formData = new FormData();
 	    formData.append('file', file);
 	    uploadProgress.classList.remove('hidden');
-	    saveButton.classList.add('hidden');
+	    saveTranscriptButton.style.display = 'none';
+            saveSummaryButton.style.display = 'none';
 	    statusMessage.classList.remove('hidden');
 	    statusMessage.innerText = 'Uploading...';
 
@@ -211,12 +265,14 @@
                     uploadProgress.value = 100; 
                     statusMessage.innerText = 'Processing complete.';
                     dancingChicken.style.display = 'none'; // Hide the dancing chicken gif on complete
-                    saveButton.classList.remove('hidden');
-                    saveButton.onclick = function() {
-                        // Save Transcript and Summary to separate files
-                        download('transcript.txt', data.Result.Transcript);
-                        download('summary.txt', data.Result.Summary);
-                    };
+	            saveTranscriptButton.style.display = 'inline'; // Show buttons when ready
+                    saveSummaryButton.style.display = 'inline';
+		    saveTranscriptButton.onclick = function() {
+		        download(appState.originalFileName + '_transcript.txt', data.Result.Transcript);
+		    };
+		    saveSummaryButton.onclick = function() {
+		        download(appState.originalFileName + '_summary.txt', data.Result.Summary);
+		    };
                 } else {
                     statusMessage.innerText = 'Error: ' + data.Result.ErrorMsg;
 		    console.log('Error: upload failed: ' + data.Result.ErrorMsg)
