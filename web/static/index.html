@@ -271,8 +271,8 @@
                     statusMessage.innerText = 'Processing complete.';
 		    queueLengthMessage.classList.add('hidden');
                     dancingChicken.style.display = 'none'; // Hide the dancing chicken gif on complete
-	            saveTranscriptButton.style.display = 'inline'; // Show buttons when ready
-                    saveSummaryButton.style.display = 'inline';
+	            saveTranscriptButton.style.display = 'block'; // Show buttons when ready
+                    saveSummaryButton.style.display = 'block';
 		    saveTranscriptButton.onclick = function() {
 		        download(appState.originalFileName + '_transcript.txt', data.Result.Transcript);
 		    };
