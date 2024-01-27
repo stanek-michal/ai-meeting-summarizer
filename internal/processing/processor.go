@@ -213,7 +213,7 @@ func generateSummary(transcript string, transcriptFilepath string) (string, erro
 			log.Println(errorStr)
 			// Kill koboldcpp
 			killKoboldcpp(koboldcmd.Process)
-			return "", errors.New("errorStr")
+			return "", errors.New(errorStr)
 		}
 
 		// Wait before trying again
@@ -245,6 +245,42 @@ func generateSummary(transcript string, transcriptFilepath string) (string, erro
 	return summaryBuf.String(), nil
 }
 
+// Remove all files starting with filePath after truncating extension
+func RemoveFilesByPrefixAllExtensions(filePath string) error {
+	dir := filepath.Dir(filePath)
+	baseFilename := filepath.Base(filePath)
+	prefix := truncateFileExtension(baseFilename)
+
+        return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+            if err != nil {
+                return err
+            }
+            // Check if the current file's name starts with our prefix and remove it if so.
+            if strings.HasPrefix(filepath.Base(path), prefix) {
+                err := os.Remove(path)
+                if err != nil {
+                    return err
+                }
+                log.Printf("Removed: %s\n", path)
+            }
+            return nil
+        })
+}
+
+func CleanUpUserFiles(filePath string, transcriptFilepath string) error {
+	// Remove all files starting with filePath and transcriptFilepath without extension
+	// (.mp4/.wav/.vtt, all of it)
+	if err := RemoveFilesByPrefixAllExtensions(filePath); err != nil {
+		return err
+	}
+	if transcriptFilepath != "" {
+		if err := RemoveFilesByPrefixAllExtensions(transcriptFilepath); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Do processing on input file (usually /tmp/upload-<randomhexstring>.wav or .mp4 or .vtt)
 func (p *Processor) Process(filePath string) (types.Result, error) {
 	log.Printf("Running Process() for: %v", filePath)
@@ -263,6 +299,7 @@ func (p *Processor) Process(filePath string) (types.Result, error) {
 		convertedFilePath, err := convertToWav(filePath)
 		if err != nil {
 			log.Printf("Conversion to .wav failed, error: %v", err)
+			CleanUpUserFiles(filePath, "")
 			return types.Result{ErrorMsg: err.Error()}, err
 		}
 		filePath = convertedFilePath
@@ -273,12 +310,14 @@ func (p *Processor) Process(filePath string) (types.Result, error) {
 		transcript, transcriptFilepath, err := generateTranscript(filePath)
 		if err != nil {
 			log.Printf("Transcript generation failed, error: %v", err)
+			CleanUpUserFiles(filePath, "")
 			return types.Result{ErrorMsg: err.Error()}, err
 		}
 		log.Printf("Generating summary for %v", transcriptFilepath)
 		summary, err := generateSummary(transcript, transcriptFilepath)
 		if err != nil {
 			log.Printf("Summary generation failed, error: %v", err)
+			CleanUpUserFiles(filePath, transcriptFilepath)
 			return types.Result{Transcript: transcript, ErrorMsg: err.Error()}, err
 		}
 		// Populate the result object
@@ -288,10 +327,13 @@ func (p *Processor) Process(filePath string) (types.Result, error) {
 			ErrorMsg:   "",
 		}
 		log.Printf("Generated summary for %v", transcriptFilepath)
+		CleanUpUserFiles(filePath, transcriptFilepath)
 		return result, nil
 	} else {
 		log.Printf("Unknown extension: %v", extension);
+		CleanUpUserFiles(filePath, "")
 		return types.Result{}, nil
 	}
+	CleanUpUserFiles(filePath, "")
 	return types.Result{}, nil
 }
