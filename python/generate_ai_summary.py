@@ -35,26 +35,39 @@ def condense_vtt_transcript(filepath):
     return condensed_transcript
 
 def chunk_transcript(transcript, total_tokens, max_tokens_per_chunk, big_speech_len):
+    chunks = []
+    # If total tokens are less than max_tokens_per_chunk, just make it one chunk
+    if total_tokens <= max_tokens_per_chunk:
+        chunks.append(transcript)
+        return chunks
+
     # Calculate initial number of chunks and adjust it
     chunks_num = total_tokens // max_tokens_per_chunk
     if total_tokens % max_tokens_per_chunk > 0:
         chunks_num += 1
-    chunks_num += 1  # Increase by 1 as per the requirement
 
     # Split the transcript into lines
     lines = transcript.split('\n')
 
-    # Calculate the initial position of line separators
-    line_separators = [i * len(lines) // chunks_num for i in range(chunks_num)]
+    # Calculate the initial position of line separators, dividing the text evenly
+    # Note: first separator is always at index 0
+    # NOTE: the following divides according to lines, not tokens
+    # If there is just one speaker, this will not work well, but hopefully single-speaker videos are
+    # small enough to fit in max_tokens_per_chunk as one chunk in the first condition in this function
+    line_separators = [i * (len(lines) // chunks_num) for i in range(chunks_num)]
 
-    # Adjust the line separators
-    for i, sep in enumerate(line_separators):
-        while sep < len(lines) and len(lines[sep].split(':')[-1]) <= big_speech_len:
-            sep += 1
-        line_separators[i] = sep -1
+    # Adjust the line separators in reverse
+    for i in range(len(line_separators) - 1, 0, -1):  # Start from the last to the second item
+        sep = line_separators[i]
+        while sep < len(lines) - 1 and len(lines[sep].split(':', 1)[-1]) < big_speech_len:
+            sep += 1  # Move forward to find a big speech
+            if i < len(line_separators) - 1 and sep >= line_separators[i + 1]:  # Ensure not to cross the next separator
+                sep = line_separators[i + 1] - 1  # Adjust to not cross over
+                break
+        line_separators[i] = sep
+    # No need to adjust the first separator (i=0), it should always remain as 0
 
     # Split the transcript into chunks
-    chunks = []
     for i in range(len(line_separators) - 1):
         chunk = '\n'.join(lines[line_separators[i]:line_separators[i + 1]])
         chunks.append(chunk)
@@ -62,9 +75,17 @@ def chunk_transcript(transcript, total_tokens, max_tokens_per_chunk, big_speech_
     # Add the last chunk
     chunks.append('\n'.join(lines[line_separators[-1]:]))
 
+    # Print the total number of lines in the transcript
+    print(f"Total number of lines in transcript: {len(lines)}, chunks_num={len(chunks)}", file=sys.stderr)
+
+    # Print the whole line_separators list
+    print(f"Line separators: {line_separators}", file=sys.stderr)
+
     return chunks
 
 def get_token_length_from_koboldcpp(text_to_tokenize):
+    # TODO: get not just total amount of tokens, but also tokens per line
+    # for more accurate chunking 
     tokencount_api_endpoint = "http://localhost:5001/api/extra/tokencount"
     payload = {
         "prompt": text_to_tokenize

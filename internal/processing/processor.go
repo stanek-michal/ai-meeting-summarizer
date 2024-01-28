@@ -220,6 +220,14 @@ func generateSummary(transcript string, transcriptFilepath string) (string, erro
 		time.Sleep(1 * time.Second)
 	}
 
+	// Open or create the log file for appending
+	pythonLogFile, err := os.OpenFile("python_summarizer_log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+	    log.Println("Failed to open error log file: %v", err)
+	    return "", err
+	}
+	defer pythonLogFile.Close()
+
 	// Run the Python summarizer script which will:
 	// - preprocess, condense and chunk .vtt transcript
 	// - call koboldcpp API to generate a summary with the LLM
@@ -229,6 +237,8 @@ func generateSummary(transcript string, transcriptFilepath string) (string, erro
 
 	var summaryBuf bytes.Buffer
 	pythonCmd.Stdout = &summaryBuf
+        pythonCmd.Stderr = pythonLogFile // Direct stderr output to the log file
+
 
 	// Run summarization script and wait for it to finish
 	if err := pythonCmd.Run(); err != nil {
