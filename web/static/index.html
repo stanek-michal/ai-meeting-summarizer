@@ -171,6 +171,14 @@
 	    padding: 5px;
 	    border-bottom: 1px solid #ccc; /* Visually separate testimonials */
 	}
+	.guestbook-header {
+	  font-family: 'Comic Sans MS', cursive, sans-serif; /* Comic Sans MS font */
+	  color: blue; /* Blue color */
+	  font-size: 48px; /* Example font size */
+	  font-weight: bold; /* Bold font */
+	  text-align: center; /* Centered text */
+	  margin: 20px 0; /* Some spacing above and below the title */
+	}
     </style>
 </head>
 <body>
@@ -185,7 +193,7 @@
     </div>
     <progress id="uploadProgress" value="0" max="100" class="hidden"></progress>
     <p id="statusMessage" class="status-message hidden"></p>
-    <p id="queueLengthMessage" class="status-message hidden"></p>
+    <p id="queueLengthMessage" class="status-message"></p>
     <button id="saveTranscriptButton" class="saveButton" style="display:none;">Save Transcript</button>
     <button id="saveSummaryButton" class="saveButton" style="display:none;">Save Summary</button>
     <div id="playMidi" class="retro-button">
@@ -195,8 +203,9 @@
     <img id="file-transfer" alt="File Transfer"/>
     <img src="cat.png" alt="Gif 3" class="cat">
     <img id="dancing-chicken" alt="Dancing Chicken"/>
-    <button id="toggleTestimonials">Show Testimonials</button>
+    <button id="toggleTestimonials">Show Guestbook</button>
     <div id="testimonialsSection" style="display:none;">
+	<div class="guestbook-header">Guestbook</div>
         <div id="testimonials" class="scroll"></div>
         <textarea id="testimonialInput" maxlength="250" placeholder="Enter your feedback/comments (max 250 chars)..."></textarea>
         <button onclick="submitTestimonial()">Submit</button>
@@ -404,7 +413,7 @@
 	    .then(response => response.json())
 	    .then(data => {
                 if(data.tasks_in_queue > 1) {
-		    queueLengthMessage.innerText = `(${data.tasks_in_queue - 1} user(s) ahead of you)`;
+		    queueLengthMessage.innerText = `(${data.tasks_in_queue - 1} user(s) in queue)`;
                     queueLengthMessage.style.display = ''; // Make sure it's visible if it was previously hidden
                 } else {
                     queueLengthMessage.style.display = 'none'; // Hide the message if no users are in queue
