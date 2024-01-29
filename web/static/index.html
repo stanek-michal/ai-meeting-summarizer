@@ -166,6 +166,11 @@
 	    max-width: 500px; /* Adjust based on layout */
 	    margin: auto;
 	}
+	.testimonial {
+	    margin-bottom: 10px;
+	    padding: 5px;
+	    border-bottom: 1px solid #ccc; /* Visually separate testimonials */
+	}
     </style>
 </head>
 <body>
@@ -272,7 +277,6 @@
 	}
 
 	updateVisitorCounter();
-	fetchTestimonials();
 
         dropArea.addEventListener('dragover', (event) => {
             event.stopPropagation();
@@ -443,15 +447,29 @@
             }
         });
 	document.getElementById('toggleTestimonials').addEventListener('click', function() {
-	    var section = document.getElementById('testimonialsSection');
-	    section.style.display = section.style.display === 'none' ? 'block' : 'none';
+		var section = document.getElementById('testimonialsSection');
+		if (section.style.display === 'none') {
+		    section.style.display = 'block';
+		    fetchTestimonials(); // Load and display testimonials when the section is shown
+		} else {
+		    section.style.display = 'none';
+		}
 	});
 
 	function fetchTestimonials() {
 	    fetch('/get-testimonials')
-		.then(response => response.text())
+		.then(response => response.json()) // Expect a JSON response
 		.then(data => {
-		    document.getElementById('testimonials').innerText = data;
+		    const testimonialsElement = document.getElementById('testimonials');
+		    testimonialsElement.innerHTML = ''; // Clear existing testimonials
+		    data.forEach(testimonialText => {
+			const div = document.createElement('div');
+			div.textContent = testimonialText;
+			div.classList.add('testimonial'); // Use a class for styling
+			testimonialsElement.appendChild(div);
+		    });
+		    // Scroll to the bottom
+		    testimonialsElement.scrollTop = testimonialsElement.scrollHeight;
 		})
 		.catch(error => {
 		    console.error('Error:', error);

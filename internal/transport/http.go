@@ -201,12 +201,16 @@ func (h *HTTPHandler) GetTestimonials(w http.ResponseWriter, r *http.Request) {
     testimonialsMutex.Lock()
     defer testimonialsMutex.Unlock()
 
-    testimonials, err := ioutil.ReadFile("web/testimonials.txt")
+    // Read the JSON file
+    data, err := ioutil.ReadFile("web/testimonials.json")
     if err != nil {
         http.Error(w, "File reading error", 500)
         return
     }
-    w.Write(testimonials)
+
+    // Set Content-Type header
+    w.Header().Set("Content-Type", "application/json")
+    w.Write(data)
 }
 
 func (h *HTTPHandler) SubmitTestimonial(w http.ResponseWriter, r *http.Request) {
@@ -230,16 +234,32 @@ func (h *HTTPHandler) SubmitTestimonial(w http.ResponseWriter, r *http.Request) 
         return
     }
 
-    // Open the file with append and write-only mode
-    f, err := os.OpenFile("web/testimonials.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
+    // Read existing testimonials from the JSON file
+    var testimonials []string
+    data, err := ioutil.ReadFile("web/testimonials.json")
     if err != nil {
-        http.Error(w, "File opening error", 500)
+        http.Error(w, "File reading error", 500)
         return
     }
-    defer f.Close()
 
-    // Append the new testimonial with a newline
-    _, err = f.WriteString(trimmedTestimonial + "\n")
+    err = json.Unmarshal(data, &testimonials)
+    if err != nil {
+        http.Error(w, "Error unmarshalling testimonials", 500)
+        return
+    }
+
+    // Append the new testimonial
+    testimonials = append(testimonials, trimmedTestimonial)
+
+    // Marshal the updated testimonials back to JSON
+    updatedData, err := json.Marshal(testimonials)
+    if err != nil {
+        http.Error(w, "Error marshalling testimonials", 500)
+        return
+    }
+
+    // Write the updated JSON data back to the file
+    err = ioutil.WriteFile("web/testimonials.json", updatedData, 0666)
     if err != nil {
         http.Error(w, "File writing error", 500)
         return
