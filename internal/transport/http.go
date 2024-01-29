@@ -16,6 +16,8 @@ import (
 
 // Mutex for counter.txt (visitor counter)
 var counterMutex sync.Mutex
+// Mutex for testimonials.txt (visitors book)
+var testimonialsMutex sync.Mutex
 
 const counterPath = "web/counter.txt"
 
@@ -129,16 +131,6 @@ func (h *HTTPHandler) HandleStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func getCounter() (int, error) {
-//    // Read the current counter value from the file
-//    data, err := ioutil.ReadFile(counterPath)
-//    if err != nil {
-//        return 0, err
-//    }
-//    count, err := strconv.Atoi(strings.TrimSpace(string(data)))
-//    if err != nil {
-//        return 0, err
-//    }
-//    return count, nil
     // Read the current counter value from the file
     data, err := ioutil.ReadFile(counterPath)
     if err != nil {
@@ -204,3 +196,53 @@ func (h *HTTPHandler) HandleTasksInQueue(w http.ResponseWriter, r *http.Request)
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(map[string]int{"tasks_in_queue": queueLength})
 }
+
+func (h *HTTPHandler) GetTestimonials(w http.ResponseWriter, r *http.Request) {
+    testimonialsMutex.Lock()
+    defer testimonialsMutex.Unlock()
+
+    testimonials, err := ioutil.ReadFile("web/testimonials.txt")
+    if err != nil {
+        http.Error(w, "File reading error", 500)
+        return
+    }
+    w.Write(testimonials)
+}
+
+func (h *HTTPHandler) SubmitTestimonial(w http.ResponseWriter, r *http.Request) {
+    testimonialsMutex.Lock()
+    defer testimonialsMutex.Unlock()
+
+    if r.Method != "POST" {
+        http.Error(w, "Invalid request method", 405)
+        return
+    }
+
+    testimonial, err := ioutil.ReadAll(r.Body)
+    if err != nil {
+        http.Error(w, "Invalid request", 400)
+        return
+    }
+
+    trimmedTestimonial := strings.TrimSpace(string(testimonial))
+    if len(trimmedTestimonial) == 0 {
+        http.Error(w, "Testimonial cannot be empty", 400)
+        return
+    }
+
+    // Open the file with append and write-only mode
+    f, err := os.OpenFile("web/testimonials.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0666)
+    if err != nil {
+        http.Error(w, "File opening error", 500)
+        return
+    }
+    defer f.Close()
+
+    // Append the new testimonial with a newline
+    _, err = f.WriteString(trimmedTestimonial + "\n")
+    if err != nil {
+        http.Error(w, "File writing error", 500)
+        return
+    }
+}
+

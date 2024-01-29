@@ -5,9 +5,7 @@
     <title>AI Meeting Summarizer</title>
     <style>
         body {
-            /*background-image: url('background.jpg');*/
             background-image: url('tile.jpg');
-/*            background-size: cover;*/
 	    background-repeat: repeat;
 
         }
@@ -18,49 +16,49 @@
 	}
 	.retro-button {
 	    image-rendering: pixelated; /* Keep the retro, pixelated look */
-    background-color: #008080;
-    color: white;
-    padding: 10px 20px;
-    border: 2px solid #000; /* Add a solid black border */
-    cursor: pointer;
-    font-size: 16px;
-    font-family: 'Courier New', Courier, monospace; /* Use a monospaced font for retro feel */
-    text-shadow: 1px 1px #000; /* Give some depth with text shadow */
-    box-shadow: 3px 3px #000; /* Add a shadow to the button for a 3D effect */
-    display: inline-block;
-    transform: rotate(-5deg); /* Slightly rotate the button for a quirky look */
-}
+	    background-color: #008080;
+	    color: white;
+	    padding: 10px 20px;
+	    border: 2px solid #000; /* Add a solid black border */
+	    cursor: pointer;
+	    font-size: 16px;
+	    font-family: 'Courier New', Courier, monospace; /* Use a monospaced font for retro feel */
+	    text-shadow: 1px 1px #000; /* Give some depth with text shadow */
+	    box-shadow: 3px 3px #000; /* Add a shadow to the button for a 3D effect */
+	    display: inline-block;
+	    transform: rotate(-5deg); /* Slightly rotate the button for a quirky look */
+	}
 	.bottom-left {
-    /* Positions the GIF at the bottom left corner */
-    position: absolute;
-    left: 10%;
-    bottom: 10%;
-}
+	    /* Positions the GIF at the bottom left corner */
+	    position: absolute;
+	    left: 10%;
+	    bottom: 10%;
+	}
 	.top-left {
-    /* Positions the GIF at the top left corner */
-    position: absolute;
-    left: 10%;
-    top: 7%;
-}
+	    /* Positions the GIF at the top left corner */
+	    position: absolute;
+	    left: 10%;
+	    top: 7%;
+	}
 	.top-right {
-    /* Positions the GIF at the top left corner */
-    position: absolute;
-    right: 10%;
-    top: 7%;
-}
+	    /* Positions the GIF at the top left corner */
+	    position: absolute;
+	    right: 10%;
+	    top: 7%;
+	}
 	.cat {
-    /* Positions the GIF at the top left corner */
-    position: absolute;
-    right: 17%;
-    bottom: 30%;
-}
+	    /* Positions the GIF at the top left corner */
+	    position: absolute;
+	    right: 17%;
+	    bottom: 30%;
+	}
 	.bottom-center {
-    /* Centers the GIF at the bottom */
-    position: absolute;
-    left: 50%;
-    bottom: 2%;
-    transform: translateX(-50%);
-}
+	    /* Centers the GIF at the bottom */
+	    position: absolute;
+	    left: 50%;
+	    bottom: 2%;
+	    transform: translateX(-50%);
+	}
 	.play-button {
 	    background-color: #008080;
 	    color: white;
@@ -157,6 +155,17 @@
             transform: translate(-50%, -50%); /* Adjust for the element's own size */
             font-size: 2em; /* Example size, adjust as needed */
         }
+	.scroll {
+	    width: 100%;
+	    height: 100px;
+	    overflow-y: scroll;
+	    border: 1px solid #ccc;
+	}
+
+	#testimonialsSection {
+	    max-width: 500px; /* Adjust based on layout */
+	    margin: auto;
+	}
     </style>
 </head>
 <body>
@@ -181,6 +190,12 @@
     <img id="file-transfer" alt="File Transfer"/>
     <img src="cat.png" alt="Gif 3" class="cat">
     <img id="dancing-chicken" alt="Dancing Chicken"/>
+    <button id="toggleTestimonials">Show Testimonials</button>
+    <div id="testimonialsSection" style="display:none;">
+        <div id="testimonials" class="scroll"></div>
+        <textarea id="testimonialInput" maxlength="250" placeholder="Enter your feedback/comments (max 250 chars)..."></textarea>
+        <button onclick="submitTestimonial()">Submit</button>
+    </div>
     <div id="visitor-counter" >
 	    <img src="0.gif" id="digit1">
 	    <img src="0.gif" id="digit2">
@@ -257,6 +272,7 @@
 	}
 
 	updateVisitorCounter();
+	fetchTestimonials();
 
         dropArea.addEventListener('dragover', (event) => {
             event.stopPropagation();
@@ -426,6 +442,45 @@
                 isPlaying = false;
             }
         });
+	document.getElementById('toggleTestimonials').addEventListener('click', function() {
+	    var section = document.getElementById('testimonialsSection');
+	    section.style.display = section.style.display === 'none' ? 'block' : 'none';
+	});
+
+	function fetchTestimonials() {
+	    fetch('/get-testimonials')
+		.then(response => response.text())
+		.then(data => {
+		    document.getElementById('testimonials').innerText = data;
+		})
+		.catch(error => {
+		    console.error('Error:', error);
+		});
+	}
+
+	function submitTestimonial() {
+	    const inputElement = document.getElementById('testimonialInput');
+	    const testimonial = inputElement.value.trim(); // Trim input
+	    if (!testimonial) {
+		alert('Testimonial cannot be empty!');
+		return;
+	    }
+	    fetch('/submit-testimonial', {
+		method: 'POST',
+		headers: {
+		    'Content-Type': 'text/plain',
+		},
+		body: testimonial,
+	    })
+	    .then(response => response.text())
+	    .then(() => {
+		fetchTestimonials(); // Refresh the testimonials
+		document.getElementById('testimonialInput').value = ''; // Clear input
+	    })
+           .catch(error => {
+	    console.error('Error:', error);
+	   });
+	}
 
     </script>
 

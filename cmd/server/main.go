@@ -20,6 +20,8 @@ func main() {
     http.HandleFunc("/status", httpHandler.HandleStatus)
     http.HandleFunc("/counter", httpHandler.HandleCounter)
     http.HandleFunc("/tasksInQueue", httpHandler.HandleTasksInQueue)
+    http.HandleFunc("/get-testimonials", httpHandler.GetTestimonials)
+    http.HandleFunc("/submit-testimonial", httpHandler.SubmitTestimonial)
 
     // Serve static files
     fs := http.FileServer(http.Dir("./web/static"))
