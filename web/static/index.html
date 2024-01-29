@@ -293,7 +293,7 @@
 	    saveTranscriptButton.style.display = 'none';
             saveSummaryButton.style.display = 'none';
 	    statusMessage.classList.remove('hidden');
-	    queueLengthMessage.classList.add('hidden');
+	    queueLengthMessage.style.display = 'none';
 	    statusMessage.innerText = 'Uploading...';
 
             const xhr = new XMLHttpRequest();
@@ -341,19 +341,22 @@
         });
 
 
-        function checkTaskStatus(taskId) {
-            fetch(`/status?id=${taskId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.Status === 'processing' || data.Status === 'waiting') {
-		    statusMessage.innerText = 'Processing...';
+	function checkTaskStatus(taskId) {
+	    fetch(`/status?id=${taskId}`)
+	    .then(response => response.json())
+	    .then(data => {
+		if (data.Status === 'processing') {
+		    statusMessage.innerText = 'Processing... (expect 5-15mins)';
+		    queueLengthMessage.style.display = 'none';
+                    setTimeout(() => checkTaskStatus(taskId), 5000);
+		} else if (data.Status === 'waiting') {
+		    statusMessage.innerText = 'Your file is in the queue...';
 		    updateQueueLength();
-		    queueLengthMessage.classList.remove('hidden');
                     setTimeout(() => checkTaskStatus(taskId), 5000);
                 } else if (data.Status === 'completed') {
                     uploadProgress.value = 100; 
                     statusMessage.innerText = 'Processing complete.';
-		    queueLengthMessage.classList.add('hidden');
+		    queueLengthMessage.style.display = 'none';
                     dancingChicken.style.display = 'none'; // Hide the dancing chicken gif on complete
 	            saveTranscriptButton.style.display = 'block'; // Show buttons when ready
                     saveSummaryButton.style.display = 'block';
@@ -380,13 +383,13 @@
 	    fetch('/tasksInQueue')
 	    .then(response => response.json())
 	    .then(data => {
-		const queueLengthMessage = document.getElementById('queueLengthMessage');
-	        if(data.tasks_in_queue > 0) {
-		    queueLengthMessage.innerText = `(${data.tasks_in_queue} users in queue)`;
-		    queueLengthMessage.style.display = ''; // Make sure it's visible if it was previously hidden
-		} else {
-		    queueLengthMessage.style.display = 'none'; // Hide the message if no users are in queue
-		}
+                if(data.tasks_in_queue > 1) {
+		    queueLengthMessage.innerText = `(${data.tasks_in_queue - 1} user(s) ahead of you)`;
+                    queueLengthMessage.style.display = ''; // Make sure it's visible if it was previously hidden
+                } else {
+                    queueLengthMessage.style.display = 'none'; // Hide the message if no users are in queue
+                }
+
 	    })
 	    .catch(error => {
 		console.error('Error:', error);
