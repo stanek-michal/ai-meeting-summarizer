@@ -154,7 +154,8 @@ def run_summarization_pipeline(transcript_file_path):
           "top_k": 100
     }
 
-    preprompt = "Summarize the following transcript from a work meeting in chronological sections. Make sure to include all relevant details, be concrete and avoid low-information statements. Include technical information and keywords as well, the summary is for a technical person. Quote the stories and statements that were impactful and stood out. Make sure that the speech of every speaker is included unless they were just briefly interjecting. The summary should be long enough to include all important details and overall should fill roughly two pages.\n\n"
+#    preprompt = "Summarize the following transcript from a work meeting in chronological sections. Make sure to include all relevant details, be concrete and avoid low-information statements. Include technical information and keywords as well, the summary is for a technical person. Quote the stories and statements that were impactful and stood out. Make sure that the speech of every speaker is included unless they were just briefly interjecting. The summary should be long enough to include all important details and overall should fill roughly two pages.\n\n"
+    preprompt = "Write a detailed summary of the following transcript from a work meeting. Organize the content into clear, chronological paragraphs that maintain a natural narrative flow. Make sure to include all important details, technical insights and notable terms, suitable for a technical reader. Ensure to integrate the contributions of all speakers, omitting only minor interjections. The summary should provide a comprehensive and detailed overview that logically progresses through the discussions, targeted at two pages in length.\n\n"
 #    preprompt = "Summarize the following transcript: \n\n"
 
     output_summary = ""
