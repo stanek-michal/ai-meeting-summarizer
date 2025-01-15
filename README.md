@@ -13,11 +13,7 @@ An AI-powered app for summarizing meeting videos working fully locally.
 
 ## Installation
 
-1. Clone this repository:
-   ```bash
-   git clone <your-repository-url>
-   cd <repository-directory>
-   ```
+1. Clone this repository.
 
 2. Make the installation script executable:
    ```bash
