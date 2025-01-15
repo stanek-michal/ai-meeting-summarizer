@@ -31,10 +31,25 @@ pip install -r requirements.txt
 # Create models directory if it doesn't exist
 mkdir -p models
 
-# Download the model file
-echo "Downloading Qwen model..."
-wget -O models/Qwen2.5-32B-Instruct-Q4_K_M.gguf \
-    "https://huggingface.co/bartowski/Qwen2.5-32B-Instruct-GGUF/resolve/main/Qwen2.5-32B-Instruct-Q4_K_M.gguf?download=true"
+# Define model path and URL
+MODEL_PATH="models/Qwen2.5-32B-Instruct-Q4_K_M.gguf"
+MODEL_URL="https://huggingface.co/bartowski/Qwen2.5-32B-Instruct-GGUF/resolve/main/Qwen2.5-32B-Instruct-Q4_K_M.gguf?download=true"
+
+# Check if model exists
+if [ -f "$MODEL_PATH" ]; then
+    echo "Model file already exists, skipping download..."
+else
+    echo "Downloading Qwen model (this may take a while)..."
+    wget -O "$MODEL_PATH" "$MODEL_URL"
+    
+    # Verify download was successful
+    if [ $? -ne 0 ]; then
+        echo "Error downloading model file!"
+        echo "You can try downloading it manually:"
+        echo "wget -O $MODEL_PATH $MODEL_URL"
+        exit 1
+    fi
+fi
 
 # Build Go binary
 echo "Building Go application..."
