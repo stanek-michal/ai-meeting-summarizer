@@ -1,5 +1,9 @@
 # AI Meeting Summarizer
 
+<p align="center">
+  <img src="summarizer.png" alt="AI Meeting Summarizer" width="800"/>
+</p>
+
 An AI-powered app for summarizing meeting videos working fully locally.
 
 ## Prerequisites
