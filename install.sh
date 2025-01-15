@@ -20,6 +20,12 @@ source venv/bin/activate
 # Install Python dependencies
 echo "Installing Python dependencies..."
 pip install --upgrade pip
+
+# Install PyTorch first
+echo "Installing PyTorch..."
+pip install torch torchvision torchaudio
+
+echo "Installing other Python packages..."
 pip install -r requirements.txt
 
 # Create models directory if it doesn't exist
