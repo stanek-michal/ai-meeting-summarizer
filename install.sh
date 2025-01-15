@@ -10,11 +10,11 @@ fi
 
 # Install system dependencies
 echo "Installing system dependencies..."
-brew install python@3.10 go ffmpeg wget
+brew install python@3.12 go ffmpeg wget
 
 # Create and activate virtual environment
 echo "Setting up Python virtual environment..."
-python3 -m venv venv
+/opt/homebrew/opt/python@3.12/bin/python3.12 -m venv venv
 source venv/bin/activate
 
 # Install Python dependencies
