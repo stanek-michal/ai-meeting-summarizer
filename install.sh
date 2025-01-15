@@ -10,7 +10,7 @@ fi
 
 # Install system dependencies
 echo "Installing system dependencies..."
-brew install python@3.10 go ffmpeg
+brew install python@3.10 go ffmpeg wget
 
 # Create and activate virtual environment
 echo "Setting up Python virtual environment..."
@@ -21,6 +21,14 @@ source venv/bin/activate
 echo "Installing Python dependencies..."
 pip install --upgrade pip
 pip install -r requirements.txt
+
+# Create models directory if it doesn't exist
+mkdir -p models
+
+# Download the model file
+echo "Downloading Qwen model..."
+wget -O models/Qwen2.5-32B-Instruct-Q4_K_M.gguf \
+    "https://huggingface.co/bartowski/Qwen2.5-32B-Instruct-GGUF/resolve/main/Qwen2.5-32B-Instruct-Q4_K_M.gguf?download=true"
 
 # Build Go binary
 echo "Building Go application..."

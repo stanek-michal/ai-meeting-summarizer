@@ -4,7 +4,8 @@ An AI-powered app for summarizing meeting videos working fully locally.
 
 ## Prerequisites
 
-- macOS (Apple Silicon, at least 32GB)
+- macOS (Apple Silicon, at least 32GB RAM)
+- Approximately 20GB of free disk space (for model download)
 
 ## Installation
 
@@ -26,9 +27,10 @@ An AI-powered app for summarizing meeting videos working fully locally.
 
    This script will:
    - Install Homebrew (if not already installed)
-   - Install Python 3.10, Go, and ffmpeg
+   - Install Python 3.10, Go, ffmpeg, and wget
    - Create a Python virtual environment
    - Install all required Python packages
+   - Download the Qwen2.5 model (~20GB)
    - Build the Go application
 
 ## Running the Application
@@ -49,16 +51,22 @@ If you encounter any issues:
 
 1. Make sure all prerequisites are installed:
    ```bash
-   brew install python@3.10 go ffmpeg
+   brew install python@3.10 go ffmpeg wget
    ```
 
-2. Try rebuilding the application:
+2. If the model download fails, you can manually download it:
+   ```bash
+   wget -O models/Qwen2.5-32B-Instruct-Q4_K_M.gguf \
+       "https://huggingface.co/bartowski/Qwen2.5-32B-Instruct-GGUF/resolve/main/Qwen2.5-32B-Instruct-Q4_K_M.gguf?download=true"
+   ```
+
+3. Try rebuilding the application:
    ```bash
    source venv/bin/activate
    go build -o summarizer_server cmd/server/main.go
    ```
 
-3. Check if the Python virtual environment is activated:
+4. Check if the Python virtual environment is activated:
    ```bash
    source venv/bin/activate
    ```
@@ -66,3 +74,4 @@ If you encounter any issues:
 ## License
 
 MIT
+

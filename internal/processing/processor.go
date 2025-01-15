@@ -153,7 +153,7 @@ func generateSummary(transcript string, transcriptFilepath string) (string, erro
     // Start llama-cpp-python in server mode with an OpenAI-compatible API
     llamaCmd := exec.Command("python",
         "-m", "llama_cpp.server",
-        "--model", "./Qwen2.5-32B-Instruct-Q4_K_M.gguf",
+        "--model", "./models/Qwen2.5-32B-Instruct-Q4_K_M.gguf",
         "--host", "127.0.0.1",
         "--port", "8000",
         "--n_ctx", "25000",
