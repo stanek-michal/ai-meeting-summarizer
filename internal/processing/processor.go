@@ -158,6 +158,7 @@ func generateSummary(transcript string, transcriptFilepath string) (string, erro
         "--port", "8000",
         "--n_ctx", "25000",
         "--n_gpu_layers", "-1",
+        "--chat_format", "chatml",
     )
 
     // Set the process to run in its own new process group
