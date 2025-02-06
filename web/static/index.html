@@ -375,7 +375,7 @@
 	    .then(response => response.json())
 	    .then(data => {
 		if (data.Status === 'processing') {
-		    statusMessage.innerText = 'Processing... (expect 5-15mins)';
+		    statusMessage.innerText = 'Processing... (expect 10-60mins)';
 		    queueLengthMessage.style.display = 'none';
                     setTimeout(() => checkTaskStatus(taskId), 5000);
 		} else if (data.Status === 'waiting') {

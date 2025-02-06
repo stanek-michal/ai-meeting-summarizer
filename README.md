@@ -47,6 +47,8 @@ An AI-powered app for summarizing meeting videos working fully locally.
 
    Now you can open http://localhost:9001 in the browser and summarize videos. You can open multiple tabs and process multiple videos in parallel.
 
+   Peak RAM usage during processing may reach 20GB - make sure to leave that much RAM free for the app while it's processing. For long videos it can take 40+ minutes.
+
 ## Troubleshooting
 
 If you encounter any issues:
