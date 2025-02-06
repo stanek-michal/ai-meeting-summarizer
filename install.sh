@@ -32,8 +32,8 @@ pip install -r requirements.txt
 mkdir -p models
 
 # Define model path and URL
-MODEL_PATH="models/Qwen2.5-32B-Instruct-Q4_K_M.gguf"
-MODEL_URL="https://huggingface.co/bartowski/Qwen2.5-32B-Instruct-GGUF/resolve/main/Qwen2.5-32B-Instruct-Q4_K_M.gguf?download=true"
+MODEL_PATH="models/Qwen2.5-14B-Instruct-Q4_K_M.gguf"
+MODEL_URL="https://huggingface.co/bartowski/Qwen2.5-14B-Instruct-GGUF/resolve/main/Qwen2.5-14B-Instruct-Q4_K_M.gguf?download=true"
 
 # Check if model exists
 if [ -f "$MODEL_PATH" ]; then

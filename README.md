@@ -56,8 +56,8 @@ If you encounter any issues:
 
 2. If the model download fails, you can manually download it:
    ```bash
-   wget -O models/Qwen2.5-32B-Instruct-Q4_K_M.gguf \
-       "https://huggingface.co/bartowski/Qwen2.5-32B-Instruct-GGUF/resolve/main/Qwen2.5-32B-Instruct-Q4_K_M.gguf?download=true"
+   wget -O models/Qwen2.5-14B-Instruct-Q4_K_M.gguf \
+       "https://huggingface.co/bartowski/Qwen2.5-14B-Instruct-GGUF/resolve/main/Qwen2.5-14B-Instruct-Q4_K_M.gguf?download=true"
    ```
 
 3. Try rebuilding the application:
