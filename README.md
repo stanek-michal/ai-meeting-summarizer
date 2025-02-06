@@ -45,6 +45,8 @@ An AI-powered app for summarizing meeting videos working fully locally.
    ./run.sh
    ```
 
+   Now you can open http://localhost:9001 in the browser and summarize videos. You can open multiple tabs and process multiple videos in parallel.
+
 ## Troubleshooting
 
 If you encounter any issues:
